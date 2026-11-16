@@ -427,3 +427,77 @@ Object.assign(window.workedExamples, {
     "frames": [{"title": "记录探索投入", "state": "120 次调用", "result": "先记录为一次性成本", "action": "统计探索与验证开销。", "reason": "只看部署期调用会低估总成本。"}, {"title": "估计任务净节省", "state": "每个任务平均节省 3 次", "result": "来自固定预算对照", "action": "在同一任务分布上估计。", "reason": "应一起检查成功率和失败重试次数。"}, {"title": "求回收点", "state": "120÷3", "result": "40 个任务等成本", "action": "将一次成本除以每任务节省。", "reason": "任务少于 40 个时，本例尚未达到等成本。"}, {"title": "验证假设", "state": "质量、调用单价、环境分布可能变化", "result": "在新环境冻结复验", "action": "按质量和成本同时决策。", "reason": "当平均节省为 0 或负时，调用数上没有回收点。"}]
   }
 });
+
+Object.assign(window.workedExamples, {
+  "serving-calculations": {
+    title: "8 个长请求要预留多少 KV 显存？",
+    intro: "32 层、8 个 KV 头、每头 128 维，KV 使用 FP16。每个请求当前缓存 4096 Token，教学例忽略分页开销和前缀共享。",
+    question: "8 个请求同时存活时，KV 张量载荷约为多少？",
+    answer: 2,
+    choices: ["512 MiB", "1 GiB", "4 GiB"],
+    frames: [
+      { title: "算单层", state: "K 和 V 各存 8×128 个数", result: "2×8×128×2 = 4096 字节/层/Token", action: "FP16 每个数占 2 字节。", reason: "公式中两个 2 分别来自 K/V 和数值字节数。" },
+      { title: "乘层数", state: "4096×32 字节", result: "131072 字节 = 128 KiB/Token", action: "每个 Token 在每层都要有缓存。", reason: "本例只算整个模型的缓存载荷，不代表分片后某张卡的占用。" },
+      { title: "乘请求长度", state: "4096 Token × 128 KiB", result: "512 MiB/请求", action: "按当前已缓存的序列长度计算。", reason: "生成更多 Token 会继续占用缓存。" },
+      { title: "乘并发并验收", state: "8 × 512 MiB", result: "约 4 GiB KV 载荷", action: "从设备预算中另扣权重与工作空间。", reason: "显存达标还需验证延迟与真实调度下的碎片。" }
+    ],
+    experiment: {
+      label: "调整并发，比较 KV 载荷与假设预算",
+      min: 1, max: 24, initial: 8, unit: "请求",
+      compare(requests) {
+        const usage = requests * 0.5;
+        return [
+          ["KV 载荷（GiB）", usage, usage <= 8 ? "估算未超预算" : "估算已超预算"],
+          ["可用 KV 预算（GiB）", 8, "教学设定，已扣除其他开销"]
+        ];
+      }
+    }
+  },
+  "dpo-calculations": {
+    title: "偏好对写反，为什么损失会变大？",
+    intro: "当前策略对 A/B 的序列 log 概率为 −2、−4，参考策略为 −3、−4。取 β=1，A 是 chosen。",
+    question: "参考策略校正后，这条样本的 DPO logit 是多少？",
+    answer: 1,
+    choices: ["2", "1", "−1"],
+    frames: [
+      { title: "算当前差值", state: "log π(A)=−2，log π(B)=−4", result: "当前差值 2", action: "用 chosen 减 rejected。", reason: "计算针对同一提示下的完整回答。" },
+      { title: "减参考差值", state: "参考差值 (−3)−(−4)=1", result: "相对差值 2−1=1", action: "比较当前策略比参考策略多偏向 A 多少。", reason: "β=1 时，相对差值就是 logit。" },
+      { title: "算单样本损失", state: "σ(1)≈0.731", result: "−log σ(1)≈0.313", action: "把 logit 转换成偏好分类的损失。", reason: "该值是单个样本的目标，不是整个训练集的准确率。" },
+      { title: "交换偏好标签", state: "A/B 互换，logit 变成 −1", result: "−log σ(−1)≈1.313", action: "对同样的模型状态重新计算。", reason: "标签方向改变了学习信号，说明数据顺序必须核对。" }
+    ],
+    experiment: {
+      label: "改变校正后 logit，比较原标签和互换标签",
+      min: -4, max: 4, initial: 1, unit: "",
+      compare(logit) {
+        return [
+          ["原标签损失", Math.log1p(Math.exp(-logit)), "softplus(−logit)"],
+          ["互换标签损失", Math.log1p(Math.exp(logit)), "softplus(logit)"]
+        ];
+      }
+    }
+  },
+  "rsi-paired-eval": {
+    title: "成功率提高时，为什么还要查退化任务？",
+    intro: "同一批 20 个任务分别用旧记忆和新记忆跑一次。8 个都成功，6 个都失败，5 个新增成功，1 个发生退化。",
+    question: "新版相对基线的成功率净提升是多少？",
+    answer: 2,
+    choices: ["4 个百分点", "25 个百分点", "20 个百分点"],
+    frames: [
+      { title: "先做配对", state: "20 个任务按 ID 对齐", result: "每个任务有基线与新版两个结果", action: "固定模型、预算和验收规则。", reason: "使用同一任务防止任务构成变化影响比较。" },
+      { title: "计算基线", state: "都成功 8 + 退化 1", result: "9/20 = 45%", action: "基线成功包含后来退化的任务。", reason: "退化指基线成功、新版失败。" },
+      { title: "计算新版", state: "都成功 8 + 新增成功 5", result: "13/20 = 65%，净增 20 个百分点", action: "新增成功数量减去退化数量。", reason: "5 个新增成功并不等于净增 5 个。" },
+      { title: "回放退化", state: "定位 1 个基线成功、新版失败的任务", result: "检查新记忆是否误用旧接口", action: "同时报告总体收益、退化与成本。", reason: "示例数字用来练习配对计算，不代表任何真实系统性能。" }
+    ],
+    experiment: {
+      label: "改变新增成功数，观察配对后的两组成功率",
+      min: 0, max: 11, initial: 5, unit: "个",
+      compare(gains) {
+        const delta = (gains - 1) * 5;
+        return [
+          ["基线成功率（%）", 45, "8 个共同成功 + 1 个退化"],
+          ["新版成功率（%）", (8 + gains) * 5, `相对基线 ${delta > 0 ? "+" : ""}${delta} 个百分点`]
+        ];
+      }
+    }
+  }
+});
