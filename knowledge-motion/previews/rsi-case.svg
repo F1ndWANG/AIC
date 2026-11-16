@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" width="760" height="260" role="img">
+<title>一次失败怎样变成下一轮可用的经验？</title>
+<rect width="760" height="260" rx="20" fill="#080e1b"/>
+<g font-family="system-ui, PingFang SC, Microsoft YaHei, sans-serif">
+<text x="28" y="44" font-size="24" font-weight="700" fill="#f0f5ff">一次失败怎样变成下一轮可用的经验？</text>
+<g opacity="1">
+<animate attributeName="opacity" calcMode="discrete" values="1;0;0;0;1" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">01 · 广度探索</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">Curriculum 分派筛选、导出、分页</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">Actor 带着初始记忆 M₀ 在陌生报表系统中尝试。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;1;0;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">02 · 检查实际产物</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">Actor 导出 80 行，目标是 128 行</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">Verifier 读取 CSV，发现还有 48 条没有导出。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">03 · 练习并更新记忆</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">定向练分页 → 128 / 128 → 写入 M₁</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">验证通过后，把分页终止条件写入记忆。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;0;1;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">04 · 冻结记忆再评估</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">未见任务分别加载 M₀ 和 M₁</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">固定模型、工具与预算，比较是否减少漏页。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+</g>
+</g>
+</svg>

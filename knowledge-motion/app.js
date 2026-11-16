@@ -151,9 +151,125 @@ function navigate(index) {
   selectCard(index);
 }
 
+
+function renderExampleExperiment(experiment) {
+  const panel = element("div", "example-experiment");
+  const label = element("label", "", experiment.label);
+  const slider = element("input");
+  Object.assign(slider, { type: "range", min: experiment.min, max: experiment.max, value: experiment.initial });
+  const value = element("output", "example-slider-value");
+  label.append(slider, value);
+  const output = element("dl", "example-data");
+  output.setAttribute("aria-live", "polite");
+  function update() {
+    const input = Number(slider.value);
+    value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
+    const rows = experiment.compare(input);
+    const max = Math.max(1, ...rows.map(([, amount]) => amount));
+    output.replaceChildren(...rows.map(([name, amount, detail]) => {
+      const tile = element("div", "example-tile");
+      const meter = element("div", "example-meter");
+      const fill = element("span");
+      fill.style.width = `${100 * amount / max}%`;
+      meter.setAttribute("aria-hidden", "true");
+      meter.append(fill);
+      tile.append(element("dt", "", name), element("dd", "example-value", Number(amount.toFixed(2))),
+        meter, element("dd", "example-before", detail));
+      return tile;
+    }));
+  }
+  slider.addEventListener("input", update);
+  panel.append(label, output);
+  update();
+  return panel;
+}
+
+function renderWorkedExample(example) {
+  const panel = document.querySelector("#worked-example");
+  panel.replaceChildren();
+  panel.hidden = !example;
+  if (!example) return;
+
+  let frameIndex = 0;
+  const heading = element("h2", "example-title", example.title);
+  heading.id = "example-title";
+  const intro = element("p", "example-intro", example.intro);
+  const stageNav = element("nav", "example-stages");
+  stageNav.setAttribute("aria-label", "算例阶段");
+  const canvas = element("div", "example-canvas");
+  canvas.setAttribute("aria-live", "polite");
+  const controls = element("div", "example-controls");
+  const back = element("button", "", "上一步");
+  const forward = element("button", "", "下一步");
+  back.type = forward.type = "button";
+  controls.append(back, forward);
+
+  const predict = element("div", "example-predict");
+  const prompt = element("p", "example-question", example.question);
+  const choices = element("div", "example-choices");
+  const feedback = element("p", "example-feedback");
+  feedback.setAttribute("role", "status");
+  for (const [index, choice] of example.choices.entries()) {
+    const button = element("button", "", choice);
+    button.type = "button";
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => {
+      for (const sibling of choices.children) sibling.setAttribute("aria-pressed", String(sibling === button));
+      const correct = index === example.answer;
+      feedback.textContent = correct
+        ? "答对了。继续逐步查看计算或状态变化。"
+        : "再试一次。用算例中的输入和规则逐步核对。";
+      feedback.dataset.correct = String(correct);
+    });
+    choices.append(button);
+  }
+  predict.append(prompt, choices, feedback);
+
+  function showFrame(index) {
+    frameIndex = index;
+    const frame = example.frames[index];
+    const prior = example.frames[index - 1];
+    for (const [position, button] of Array.from(stageNav.children).entries()) {
+      if (position === index) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    }
+    back.disabled = index === 0;
+    forward.textContent = index === example.frames.length - 1 ? "从头再看" : "下一步";
+    const transition = element("div", "example-transition");
+    const action = element("p", "example-action", frame.action);
+    const data = element("dl", "example-data");
+    for (const [key, label] of [["state", "当前状态"], ["result", "观察结果"]]) {
+      const tile = element("div", "example-tile");
+      const value = element("dd", "example-value", frame[key]);
+      const changed = prior && prior[key] !== frame[key];
+      if (changed) tile.classList.add("example-changed");
+      tile.append(element("dt", "", label));
+      if (changed) tile.append(element("dd", "example-before", "上一步 · " + prior[key]));
+      tile.append(value);
+      data.append(tile);
+    }
+    const reason = element("p", "example-reason", frame.reason);
+    transition.append(action, data, reason);
+    canvas.replaceChildren(transition);
+  }
+
+  for (const [index, frame] of example.frames.entries()) {
+    const button = element("button", "", `${index + 1}. ${frame.title}`);
+    button.type = "button";
+    button.addEventListener("click", () => showFrame(index));
+    stageNav.append(button);
+  }
+  back.addEventListener("click", () => showFrame(frameIndex - 1));
+  forward.addEventListener("click", () => showFrame((frameIndex + 1) % example.frames.length));
+  panel.append(heading, intro, predict, stageNav, canvas, controls);
+  if (example.experiment) panel.append(renderExampleExperiment(example.experiment));
+  showFrame(0);
+}
+
 function renderTopic(topic) {
   stopPlayback();
   currentTopic = topic;
+  renderWorkedExample(window.workedExamples?.[topic.id]);
   document.title = topic.title + " | 知识动效图谱";
   document.querySelector("#title").textContent = topic.title;
   document.querySelector("#subtitle").textContent = topic.subtitle;

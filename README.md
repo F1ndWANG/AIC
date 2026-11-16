@@ -4,6 +4,14 @@
 
 [完整知识点目录](./knowledge-motion/KNOWLEDGE-MAP.md) · [打开交互播放器](https://f1ndwang.github.io/AIC/knowledge-motion/)
 
+## 先做两个算例
+
+每章都有一道预测题和四步演示。先选答案，再逐步观察数据怎么变、为什么变。
+
+[![手算因果注意力](./knowledge-motion/previews/attention-case.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=transformer-architecture)
+
+[![跟踪 Agent 的记忆更新](./knowledge-motion/previews/rsi-case.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rsi)
+
 ## 模型基础
 
 ### 01 · 大语言模型基础

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" width="760" height="260" role="img">
+<title>为什么未来 Token 对当前输出没有影响？</title>
+<rect width="760" height="260" rx="20" fill="#080e1b"/>
+<g font-family="system-ui, PingFang SC, Microsoft YaHei, sans-serif">
+<text x="28" y="44" font-size="24" font-weight="700" fill="#f0f5ff">为什么未来 Token 对当前输出没有影响？</text>
+<g opacity="1">
+<animate attributeName="opacity" calcMode="discrete" values="1;0;0;0;1" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">01 · 原始分数</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">第 2 个位置看三个键：0、0、4</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">值向量 V 简化为 2、8、20。后面的位置分数最高。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;1;0;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">02 · 因果掩码</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">位置 3 的分数：4 → −∞</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">位置 3 在未来。先屏蔽，再计算 softmax。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">03 · 归一化</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">注意力权重：0.5、0.5、0</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">两个可见位置等分权重，未来位置分到 0。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+</g>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;0;1;0" keyTimes="0;0.25;0.5;0.75;1" dur="20s" repeatCount="indefinite"/>
+<rect x="28" y="68" width="704" height="139" rx="14" fill="#152940" stroke="#40758e"/>
+<text x="48" y="100" fill="#7ce7ff" font-size="17" font-weight="700">04 · 按权重加和</text>
+<text x="48" y="142" fill="#f0f5ff" font-size="24" font-weight="700">0.5 × 2 + 0.5 × 8 + 0 × 20 = 5</text>
+<text x="48" y="178" fill="#b1c2d7" font-size="17">即使把最后一个 V 从 20 改成 200，输出仍是 5。</text>
+<rect x="28" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="206" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="384" y="227" width="170" height="5" rx="2.5" fill="#30455d"/>
+<rect x="562" y="227" width="170" height="5" rx="2.5" fill="#7ce7ff"/>
+</g>
+</g>
+</svg>
