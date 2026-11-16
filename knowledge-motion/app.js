@@ -172,8 +172,9 @@ function renderTopic(topic) {
     const number = element("span", "card-number", String(index + 1).padStart(2, "0"));
     number.setAttribute("aria-hidden", "true");
     headline.append(number, document.createTextNode(entry.title));
-    card.append(headline, element("p", "card-subtitle", entry.subtitle),
-      renderVisual(entry.visual), element("p", "description", entry.description));
+    card.append(headline);
+    if (entry.subtitle) card.append(element("p", "card-subtitle", entry.subtitle));
+    card.append(renderVisual(entry.visual), element("p", "description", entry.description));
     if (entry.checks?.length) {
       const details = element("details", "card-checks");
       const list = element("ul");
@@ -242,10 +243,13 @@ document.addEventListener("keydown", (event) => {
 });
 document.querySelector("#print").addEventListener("click", () => window.print());
 if (topics.length) {
-  const requestedTopic = new URLSearchParams(window.location.search).get("topic");
-  const initialTopic = topics.find(({ id }) => id === requestedTopic) ?? topics[0];
+  const params = new URLSearchParams(window.location.search);
+  const requestedTopic = topics.find(({ id }) => id === params.get("topic"));
+  const initialTopic = requestedTopic ?? topics[0];
   topicSelect.value = initialTopic.id;
   renderTopic(initialTopic);
+  const step = Number(params.get("step"));
+  if (requestedTopic && Number.isInteger(step) && step >= 1) navigate(step - 1);
 } else {
   document.querySelector("#title").textContent = "暂无主题";
   document.querySelector("#subtitle").textContent = "请在 index.html 中加载至少一个主题脚本。";

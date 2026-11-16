@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 374" width="760" height="374" role="img">
+<title>Agent 规划、工具与执行六步动效</title>
+<rect width="760" height="374" rx="19" fill="#080e1b"/>
+<g font-family="system-ui, PingFang SC, Microsoft YaHei, sans-serif">
+<text x="26" y="45" fill="#f0f5ff" font-size="25" font-weight="700">Agent 规划、工具与执行</text>
+<rect x="26" y="68" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="1">
+<animate attributeName="opacity" calcMode="discrete" values="1;0;0;0;0;0;1" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="26" y="68" width="348" height="82" rx="12" fill="#183047" stroke="#7ce7ff" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#7ce7ff" font-size="18" font-weight="700">1 / 6</text>
+</g>
+<text x="40" y="100" fill="#7ce7ff" font-size="16" font-weight="700">01</text>
+<text x="72" y="100" fill="#f0f5ff" font-size="19" font-weight="650">任务与环境状态</text>
+<text x="40" y="127" fill="#b1c2d7" font-size="13">解析目标 → 读取状态 → 选择下一步</text>
+<rect x="386" y="68" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;1;0;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="386" y="68" width="348" height="82" rx="12" fill="#183047" stroke="#d1bfff" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#d1bfff" font-size="18" font-weight="700">2 / 6</text>
+</g>
+<text x="400" y="100" fill="#d1bfff" font-size="16" font-weight="700">02</text>
+<text x="432" y="100" fill="#f0f5ff" font-size="19" font-weight="650">计划与重规划</text>
+<text x="400" y="127" fill="#b1c2d7" font-size="13">拆出子目标 → 执行一步 → 根据反馈改计划</text>
+<rect x="26" y="162" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;1;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="26" y="162" width="348" height="82" rx="12" fill="#183047" stroke="#ffda96" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#ffda96" font-size="18" font-weight="700">3 / 6</text>
+</g>
+<text x="40" y="194" fill="#ffda96" font-size="16" font-weight="700">03</text>
+<text x="72" y="194" fill="#f0f5ff" font-size="19" font-weight="650">ReAct 循环</text>
+<text x="40" y="221" fill="#b1c2d7" font-size="13">决定动作 → 调用工具 → 读取观察</text>
+<rect x="386" y="162" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;0;1;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="386" y="162" width="348" height="82" rx="12" fill="#183047" stroke="#7af2cc" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#7af2cc" font-size="18" font-weight="700">4 / 6</text>
+</g>
+<text x="400" y="194" fill="#7af2cc" font-size="16" font-weight="700">04</text>
+<text x="432" y="194" fill="#f0f5ff" font-size="19" font-weight="650">工具 Schema</text>
+<text x="400" y="221" fill="#b1c2d7" font-size="13">声明参数 → 校验输入 → 传回结构化结果</text>
+<rect x="26" y="256" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;0;0;1;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="26" y="256" width="348" height="82" rx="12" fill="#183047" stroke="#ffa7c5" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#ffa7c5" font-size="18" font-weight="700">5 / 6</text>
+</g>
+<text x="40" y="288" fill="#ffa7c5" font-size="16" font-weight="700">05</text>
+<text x="72" y="288" fill="#f0f5ff" font-size="19" font-weight="650">权限、幂等与恢复</text>
+<text x="40" y="315" fill="#b1c2d7" font-size="13">检查授权 → 执行动作 → 根据错误恢复</text>
+<rect x="386" y="256" width="348" height="82" rx="12" fill="#111e32" stroke="#30455d"/>
+<g opacity="0">
+<animate attributeName="opacity" calcMode="discrete" values="0;0;0;0;0;1;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" dur="15s" repeatCount="indefinite"/>
+<rect x="386" y="256" width="348" height="82" rx="12" fill="#183047" stroke="#b6c9ff" stroke-width="2"/>
+<text x="726" y="44" text-anchor="end" fill="#b6c9ff" font-size="18" font-weight="700">6 / 6</text>
+</g>
+<text x="400" y="288" fill="#b6c9ff" font-size="16" font-weight="700">06</text>
+<text x="432" y="288" fill="#f0f5ff" font-size="19" font-weight="650">多 Agent 分工</text>
+<text x="400" y="315" fill="#b1c2d7" font-size="13">定义角色与共享状态 → 交接 → 验收</text>
+</g>
+</svg>
