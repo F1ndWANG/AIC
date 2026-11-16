@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" role="img">
+<title>Agent 工作流、恢复与并发</title>
+<rect width="760" height="360" rx="20" fill="#080e1b"/>
+<g font-family="system-ui, sans-serif">
+<text x="26" y="43" fill="#f0f5ff" font-size="25" font-weight="700">Agent 工作流、恢复与并发</text>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="1;0;0;0;0;0;1" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="95" fill="#f0f5ff" font-size="19">01 · 显式运行状态</text>
+<text x="40" y="123" fill="#b1c2d7" font-size="13">按等待查询、等待导出、等待验收推进</text>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;1;0;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="95" fill="#f0f5ff" font-size="19">02 · 检查点恢复</text>
+<text x="400" y="123" fill="#b1c2d7" font-size="13">重启后读取持久化检查点</text>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="189" fill="#f0f5ff" font-size="19">03 · 重试与补偿</text>
+<text x="40" y="217" fill="#b1c2d7" font-size="13">区分可重试故障和需要补偿的业务失败</text>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;1;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="189" fill="#f0f5ff" font-size="19">04 · 并行任务和汇合</text>
+<text x="400" y="217" fill="#b1c2d7" font-size="13">收齐两项结果后才计算金额</text>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;1;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="283" fill="#f0f5ff" font-size="19">05 · 重复事件与幂等</text>
+<text x="40" y="311" fill="#b1c2d7" font-size="13">按事件 ID 去重并检查当前状态</text>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;0;1;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="283" fill="#f0f5ff" font-size="19">06 · 人工接管与恢复</text>
+<text x="400" y="311" fill="#b1c2d7" font-size="13">暂停保存请求、上下文和审批对象</text>
+</g>
+</svg>
