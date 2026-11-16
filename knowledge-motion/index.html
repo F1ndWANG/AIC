@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>知识动效图谱</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="topics/llm-post-training.js"></script>
+  <script defer src="topics/agent-reliability.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="toolbar">
+        <label>知识主题 <select id="topics"></select></label>
+        <div class="actions">
+          <button id="play" type="button">播放动效</button>
+          <button id="overview" type="button">总览</button>
+          <button id="print" type="button">打印 / PDF</button>
+        </div>
+      </div>
+      <h1 id="title"></h1>
+      <p id="subtitle"></p>
+      <nav id="steps" aria-label="讲解步骤"></nav>
+      <div class="transport" id="transport" hidden>
+        <div class="transport-buttons">
+          <button id="previous" type="button" aria-label="上一张卡片">← 上一步</button>
+          <button id="next" type="button" aria-label="下一张卡片">下一步 →</button>
+        </div>
+        <div class="progress-display">
+          <progress id="progress" aria-label="讲解进度"></progress>
+          <span id="position"></span>
+        </div>
+        <label>速度
+          <select id="speed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+        </label>
+      </div>
+      <p id="status" class="sr-only" role="status"></p>
+    </header>
+    <section id="cards" aria-label="知识卡片"></section>
+    <footer>
+      <p id="note"></p>
+      <ul id="sources" aria-label="参考资料"></ul>
+    </footer>
+    <noscript>启用 JavaScript 后即可查看知识卡片。</noscript>
+  </main>
+</body>
+</html>
