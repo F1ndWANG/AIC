@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" role="img">
+<title>RRF 实算：两路召回到一个排序</title>
+<rect width="760" height="360" rx="20" fill="#080e1b"/>
+<g font-family="system-ui, sans-serif">
+<text x="26" y="43" fill="#f0f5ff" font-size="25" font-weight="700">RRF 实算：两路召回到一个排序</text>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="1;0;0;0;0;0;1" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="95" fill="#f0f5ff" font-size="19">01 · 为什么先看排名</text>
+<text x="40" y="123" fill="#b1c2d7" font-size="13">两路分数刻度不同</text>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;1;0;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="95" fill="#f0f5ff" font-size="19">02 · 单路贡献</text>
+<text x="400" y="123" fill="#b1c2d7" font-size="13">第 1 名得 1/61，第 2 名得 1/62</text>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="189" fill="#f0f5ff" font-size="19">03 · 两路贡献求和</text>
+<text x="40" y="217" fill="#b1c2d7" font-size="13">A≈0.01639；B≈0.03252；C≈0.01613</text>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;1;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="189" fill="#f0f5ff" font-size="19">04 · k 如何改变差距</text>
+<text x="400" y="217" fill="#b1c2d7" font-size="13">k=1 时分别为 0.5、0.333；k=60 时约 0.01639、0.01613</text>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;1;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="283" fill="#f0f5ff" font-size="19">05 · 召回窗口的边界</text>
+<text x="40" y="311" fill="#b1c2d7" font-size="13">若只取前两名，D 无这一项贡献</text>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;0;1;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="283" fill="#f0f5ff" font-size="19">06 · 融合、重排和证据</text>
+<text x="400" y="311" fill="#b1c2d7" font-size="13">重排按问题条件核对适用性</text>
+</g>
+</svg>

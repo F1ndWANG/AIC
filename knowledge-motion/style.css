@@ -251,3 +251,5 @@ a { color: var(--cyan); text-underline-offset: 3px; }
   .visual .phase-pending { opacity: 1; }
   .visual .phase-active { outline: none; }
 }
+
+.card-source { display: inline-block; align-self: flex-start; margin-top: 10px; color: var(--accent); font-size: .8rem; }

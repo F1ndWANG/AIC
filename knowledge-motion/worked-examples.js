@@ -501,3 +501,58 @@ Object.assign(window.workedExamples, {
     }
   }
 });
+
+Object.assign(window.workedExamples, {
+  "speculative-sampling": {
+    title: "拒绝草稿 A 以后，为什么不能直接重抽目标分布？",
+    intro: "草稿分布 q=(0.8,0.2)，目标分布 p=(0.6,0.4)。原论文的采样算法保持目标分布，以下概率为教学算例。",
+    question: "草稿提出 A 后被拒，修正采样选 B 的概率是多少？",
+    answer: 2,
+    choices: ["0.2", "0.4", "1.0"],
+    frames: [
+      { title: "生成候选", state: "q(A)=0.8，q(B)=0.2", result: "草稿提出 A", action: "用草稿分布采样。", reason: "目标分布用同一前缀计算。" },
+      { title: "验收", state: "p(A)/q(A)=0.6/0.8", result: "接受率 0.75，u=0.9 时拒绝", action: "把均匀随机数与 min(1,p/q) 比较。", reason: "草稿给 A 的概率已经高于目标给的概率。" },
+      { title: "补不足的质量", state: "正部 max(p−q,0)=(0,0.2)", result: "归一化成 (0,1)，输出 B", action: "只在拒绝分支采修正分布。", reason: "直接重抽 p 会把已验收的 A 再加入一部分。" },
+      { title: "合并概率", state: "A 验收 0.6；B 验收 0.2；拒绝后 B 0.2", result: "总分布 (0.6,0.4)", action: "将互斥路径的概率相加。", reason: "这里验证的是分布相同。单次采样轨迹可以不同。" }
+    ],
+    experiment: {
+      label: "改变草稿提出 A 的概率，观察验收与补偿",
+      min: 10, max: 90, initial: 80, unit: "%",
+      compare(value) {
+        const acceptedA = Math.min(value, 60);
+        const correctionA = 60 - acceptedA;
+        return [
+          ["经草稿验收输出 A（%）", acceptedA, "min(q(A), p(A))"],
+          ["经拒绝修正输出 A（%）", correctionA, "max(p(A)−q(A), 0)"],
+          ["A 的总概率（%）", acceptedA + correctionA, "与目标分布一致"]
+        ];
+      }
+    }
+  },
+  "grpo-objective": {
+    title: "负优势为什么不能先裁剪比值再乘？",
+    intro: "选一个已生成 Token，设组内优势 A=−1，旧策略概率 0.4，新策略概率 0.2，裁剪阈值 ε=0.2。只算裁剪代理项。",
+    question: "min(rA, clip(r)A) 的值是多少？",
+    answer: 1,
+    choices: ["−0.5", "−0.8", "0.8"],
+    frames: [
+      { title: "算新旧比", state: "0.2 / 0.4", result: "r=0.5", action: "用当前概率除以采样时旧策略概率。", reason: "参考策略不参与这个比值。" },
+      { title: "看裁剪区间", state: "[0.8, 1.2]", result: "clip(0.5)=0.8", action: "占位计算第二个分支。", reason: "还需要给两个分支各乘 A。" },
+      { title: "分别相乘", state: "0.5×(−1)=−0.5；0.8×(−1)=−0.8", result: "min(−0.5,−0.8)=−0.8", action: "保留较小的代理目标。", reason: "乘负数会反转大小，改变运算顺序会算错。" },
+      { title: "核对完整目标", state: "本例只计算一个 Token 的裁剪代理项", result: "尚未扣除 KL 或做样本归约", action: "带着这个局部例子读 DeepSeekMath 式 (3)。", reason: "结果监督同响应内共享优势，完整优化还涉及多个响应及 Token。" }
+    ]
+  },
+  "rrf-ranking": {
+    title: "一个文档在两路都排第二，能超过一路第一吗？",
+    intro: "词法返回 [A,B]，向量返回 [C,B]。教学例用截断列表，未出现的路不加分，k=60。",
+    question: "合并后哪篇排名最高？",
+    answer: 1,
+    choices: ["A", "B", "C"],
+    frames: [
+      { title: "列出两路排名", state: "词法 A→B；向量 C→B", result: "B 在两路都第 2", action: "只取名次，无须比较两路原始分数。", reason: "本例每个列表从 1 开始计名次。" },
+      { title: "算每路贡献", state: "第 1 名 1/61，第 2 名 1/62", result: "A 和 C 各只有一次贡献", action: "对每路文档算 1/(k+rank)。", reason: "本例只对返回的候选累计。" },
+      { title: "按文档求和", state: "A≈0.01639，B≈0.03226，C≈0.01639", result: "B 第一，A 和 C 并列", action: "把 B 的 1/62 加两次。", reason: "如需稳定排序，明确同分处理规则。" },
+      { title: "验证有效性", state: "融合第一的 B 可能是过期政策", result: "核对发布时间和适用条件", action: "将排序结果交给重排及证据校验。", reason: "融合得分是候选信号，答案仍需有效证据。" }
+    ]
+  }
+});

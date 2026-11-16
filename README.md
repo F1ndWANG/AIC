@@ -1,6 +1,6 @@
 # AIC · 从大语言模型到 RSI
 
-39 个专题 · 234 张动效卡。仓库首页可浏览循环预览，点击图片打开对应章节的交互版。
+42 个专题 · 252 张动效卡。仓库首页可浏览循环预览，点击图片打开对应章节的交互版。
 
 [完整知识点目录](./knowledge-motion/KNOWLEDGE-MAP.md) · [打开交互播放器](https://f1ndwang.github.io/AIC/knowledge-motion/)
 
@@ -72,109 +72,121 @@
 
 [![推理显存与延迟实算六步动效](./knowledge-motion/previews/serving-calculations.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=serving-calculations)
 
-### 15 · 解码策略与结构化输出
+### 15 · 投机解码：验收、补分布与加速
+
+[![投机解码：验收、补分布与加速六步动效](./knowledge-motion/previews/speculative-sampling.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=speculative-sampling)
+
+### 16 · 解码策略与结构化输出
 
 [![解码策略与结构化输出六步动效](./knowledge-motion/previews/decoding-controls.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=decoding-controls)
 
-### 16 · 长上下文与上下文工程
+### 17 · 长上下文与上下文工程
 
 [![长上下文与上下文工程六步动效](./knowledge-motion/previews/context-engineering.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=context-engineering)
 
-### 17 · 长上下文中的证据可靠性
+### 18 · 长上下文中的证据可靠性
 
 [![长上下文中的证据可靠性六步动效](./knowledge-motion/previews/evidence-reliability.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=evidence-reliability)
 
 ## 后训练、推理与多模态
 
-### 18 · LLM 后训练关键检查点
+### 19 · LLM 后训练关键检查点
 
 [![LLM 后训练关键检查点六步动效](./knowledge-motion/readme-preview.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=llm-post-training)
 
-### 19 · 指令微调与参数高效适配
+### 20 · 指令微调与参数高效适配
 
 [![指令微调与参数高效适配六步动效](./knowledge-motion/previews/sft-peft.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=sft-peft)
 
-### 20 · 偏好对齐与强化学习
+### 21 · 偏好对齐与强化学习
 
 [![偏好对齐与强化学习六步动效](./knowledge-motion/previews/preference-rl.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=preference-rl)
 
-### 21 · DPO 损失与偏好信号实算
+### 22 · DPO 损失与偏好信号实算
 
 [![DPO 损失与偏好信号实算六步动效](./knowledge-motion/previews/dpo-calculations.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=dpo-calculations)
 
-### 22 · 可验证奖励与奖励漏洞
+### 23 · GRPO：优势、裁剪和参考约束
+
+[![GRPO：优势、裁剪和参考约束六步动效](./knowledge-motion/previews/grpo-objective.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=grpo-objective)
+
+### 24 · 可验证奖励与奖励漏洞
 
 [![可验证奖励与奖励漏洞六步动效](./knowledge-motion/previews/verifiable-reward.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=verifiable-reward)
 
-### 23 · 推理方法与模型评估
+### 25 · 推理方法与模型评估
 
 [![推理方法与模型评估六步动效](./knowledge-motion/previews/reasoning-evaluation.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=reasoning-evaluation)
 
-### 24 · 推理搜索与预算分配
+### 26 · 推理搜索与预算分配
 
 [![推理搜索与预算分配六步动效](./knowledge-motion/previews/inference-search.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=inference-search)
 
-### 25 · 多模态大语言模型
+### 27 · 多模态大语言模型
 
 [![多模态大语言模型六步动效](./knowledge-motion/previews/multimodal-llm.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=multimodal-llm)
 
 ## RAG 与 Agent
 
-### 26 · RAG 检索增强生成
+### 28 · RAG 检索增强生成
 
 [![RAG 检索增强生成六步动效](./knowledge-motion/previews/rag.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rag)
 
-### 27 · 知识库构建与索引更新
+### 29 · 知识库构建与索引更新
 
 [![知识库构建与索引更新六步动效](./knowledge-motion/previews/rag-ingestion.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rag-ingestion)
 
-### 28 · 检索融合与证据重排
+### 30 · 检索融合与证据重排
 
 [![检索融合与证据重排六步动效](./knowledge-motion/previews/retrieval-ranking.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=retrieval-ranking)
 
-### 29 · Agent 规划、工具与执行
+### 31 · RRF 实算：两路召回到一个排序
+
+[![RRF 实算：两路召回到一个排序六步动效](./knowledge-motion/previews/rrf-ranking.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rrf-ranking)
+
+### 32 · Agent 规划、工具与执行
 
 [![Agent 规划、工具与执行六步动效](./knowledge-motion/previews/agent-planning.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-planning)
 
-### 30 · 工具协议、权限与抗注入
+### 33 · 工具协议、权限与抗注入
 
 [![工具协议、权限与抗注入六步动效](./knowledge-motion/previews/tool-protocols.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=tool-protocols)
 
-### 31 · Agent 威胁建模与安全验收
+### 34 · Agent 威胁建模与安全验收
 
 [![Agent 威胁建模与安全验收六步动效](./knowledge-motion/previews/agent-security.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-security)
 
-### 32 · Agent 工作流、恢复与并发
+### 35 · Agent 工作流、恢复与并发
 
 [![Agent 工作流、恢复与并发六步动效](./knowledge-motion/previews/agent-workflows.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-workflows)
 
-### 33 · AI Agent 工具调用与可靠性
+### 36 · AI Agent 工具调用与可靠性
 
 [![AI Agent 工具调用与可靠性六步动效](./knowledge-motion/previews/agent-reliability.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-reliability)
 
-### 34 · Agent 记忆与上下文工程
+### 37 · Agent 记忆与上下文工程
 
 [![Agent 记忆与上下文工程六步动效](./knowledge-motion/previews/agent-memory.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-memory)
 
-### 35 · Agent 验证、评估与安全
+### 38 · Agent 验证、评估与安全
 
 [![Agent 验证、评估与安全六步动效](./knowledge-motion/previews/agent-verification.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-verification)
 
-### 36 · Agent 评估、统计与故障定位
+### 39 · Agent 评估、统计与故障定位
 
 [![Agent 评估、统计与故障定位六步动效](./knowledge-motion/previews/agent-eval-design.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-eval-design)
 
 ## 自我改进与 RSI
 
-### 37 · 从反思到自我改进
+### 40 · 从反思到自我改进
 
 [![从反思到自我改进六步动效](./knowledge-motion/previews/self-improvement.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=self-improvement)
 
-### 38 · RSI 递归自我改进
+### 41 · RSI 递归自我改进
 
 [![RSI 递归自我改进六步动效](./knowledge-motion/previews/rsi.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rsi)
 
-### 39 · RSI 实验设计与失效分析
+### 42 · RSI 实验设计与失效分析
 
 [![RSI 实验设计与失效分析六步动效](./knowledge-motion/previews/rsi-evaluation.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rsi-evaluation)
 

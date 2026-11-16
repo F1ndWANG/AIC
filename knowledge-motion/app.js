@@ -342,6 +342,11 @@ function renderTopic(topic) {
       details.append(element("summary", "", "验证方法"), list);
       card.append(details);
     }
+    if (entry.source) {
+      const link = element("a", "card-source", entry.source.label);
+      link.href = entry.source.url;
+      card.append(link);
+    }
     cards.append(card);
   }
   const sources = document.querySelector("#sources");
