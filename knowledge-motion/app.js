@@ -242,7 +242,10 @@ document.addEventListener("keydown", (event) => {
 });
 document.querySelector("#print").addEventListener("click", () => window.print());
 if (topics.length) {
-  renderTopic(topics[0]);
+  const requestedTopic = new URLSearchParams(window.location.search).get("topic");
+  const initialTopic = topics.find(({ id }) => id === requestedTopic) ?? topics[0];
+  topicSelect.value = initialTopic.id;
+  renderTopic(initialTopic);
 } else {
   document.querySelector("#title").textContent = "暂无主题";
   document.querySelector("#subtitle").textContent = "请在 index.html 中加载至少一个主题脚本。";
