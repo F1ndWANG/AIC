@@ -1,12 +1,12 @@
 # AIC · 从大语言模型到 RSI
 
-20 个专题 · 120 张动效卡。仓库首页可浏览循环预览，点击图片打开对应章节的交互版。
+22 个专题 · 132 张动效卡。仓库首页可浏览循环预览，点击图片打开对应章节的交互版。
 
 [完整知识点目录](./knowledge-motion/KNOWLEDGE-MAP.md) · [打开交互播放器](https://f1ndwang.github.io/AIC/knowledge-motion/)
 
 ## 先做两个算例
 
-每章都有一道预测题和四步演示。先选答案，再逐步观察数据怎么变、为什么变。
+已有 20 章包含一道预测题和四步演示。先选答案，再逐步观察数据怎么变、为什么变。
 
 [![手算因果注意力](./knowledge-motion/previews/attention-case.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=transformer-architecture)
 
@@ -44,61 +44,69 @@
 
 [![高效推理与服务六步动效](./knowledge-motion/previews/efficient-serving.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=efficient-serving)
 
+### 08 · 解码策略与结构化输出
+
+[![解码策略与结构化输出六步动效](./knowledge-motion/previews/decoding-controls.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=decoding-controls)
+
 ## 后训练、推理与多模态
 
-### 08 · LLM 后训练关键检查点
+### 09 · LLM 后训练关键检查点
 
 [![LLM 后训练关键检查点六步动效](./knowledge-motion/readme-preview.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=llm-post-training)
 
-### 09 · 指令微调与参数高效适配
+### 10 · 指令微调与参数高效适配
 
 [![指令微调与参数高效适配六步动效](./knowledge-motion/previews/sft-peft.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=sft-peft)
 
-### 10 · 偏好对齐与强化学习
+### 11 · 偏好对齐与强化学习
 
 [![偏好对齐与强化学习六步动效](./knowledge-motion/previews/preference-rl.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=preference-rl)
 
-### 11 · 推理方法与模型评估
+### 12 · 推理方法与模型评估
 
 [![推理方法与模型评估六步动效](./knowledge-motion/previews/reasoning-evaluation.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=reasoning-evaluation)
 
-### 12 · 多模态大语言模型
+### 13 · 多模态大语言模型
 
 [![多模态大语言模型六步动效](./knowledge-motion/previews/multimodal-llm.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=multimodal-llm)
 
 ## RAG 与 Agent
 
-### 13 · RAG 检索增强生成
+### 14 · RAG 检索增强生成
 
 [![RAG 检索增强生成六步动效](./knowledge-motion/previews/rag.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rag)
 
-### 14 · Agent 规划、工具与执行
+### 15 · 检索融合与证据重排
+
+[![检索融合与证据重排六步动效](./knowledge-motion/previews/retrieval-ranking.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=retrieval-ranking)
+
+### 16 · Agent 规划、工具与执行
 
 [![Agent 规划、工具与执行六步动效](./knowledge-motion/previews/agent-planning.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-planning)
 
-### 15 · AI Agent 工具调用与可靠性
+### 17 · AI Agent 工具调用与可靠性
 
 [![AI Agent 工具调用与可靠性六步动效](./knowledge-motion/previews/agent-reliability.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-reliability)
 
-### 16 · Agent 记忆与上下文工程
+### 18 · Agent 记忆与上下文工程
 
 [![Agent 记忆与上下文工程六步动效](./knowledge-motion/previews/agent-memory.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-memory)
 
-### 17 · Agent 验证、评估与安全
+### 19 · Agent 验证、评估与安全
 
 [![Agent 验证、评估与安全六步动效](./knowledge-motion/previews/agent-verification.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=agent-verification)
 
 ## 自我改进与 RSI
 
-### 18 · 从反思到自我改进
+### 20 · 从反思到自我改进
 
 [![从反思到自我改进六步动效](./knowledge-motion/previews/self-improvement.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=self-improvement)
 
-### 19 · RSI 递归自我改进
+### 21 · RSI 递归自我改进
 
 [![RSI 递归自我改进六步动效](./knowledge-motion/previews/rsi.gif)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rsi)
 
-### 20 · RSI 实验设计与失效分析
+### 22 · RSI 实验设计与失效分析
 
 [![RSI 实验设计与失效分析六步动效](./knowledge-motion/previews/rsi-evaluation.svg)](https://f1ndwang.github.io/AIC/knowledge-motion/?topic=rsi-evaluation)
 

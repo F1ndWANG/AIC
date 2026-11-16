@@ -230,3 +230,24 @@ a { color: var(--cyan); text-underline-offset: 3px; }
 @media (prefers-reduced-motion: no-preference) {
   .example-meter span { animation: fill .26s ease-out both; }
 }
+
+.phase-controls { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-top: 10px; }
+.phase-controls button { padding: 4px 9px; font-size: .8rem; }
+.phase-controls button:disabled { opacity: .45; cursor: default; }
+.phase-explanation { flex: 1 0 100%; color: var(--accent); font-size: .85rem; line-height: 1.45; }
+.phase-explanation:empty { display: none; }
+.visual .phase-pending { opacity: .55; }
+.visual .phase-active { outline: 1px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  .visual .phase-active { animation: phase-reveal .45s ease-out; }
+  .visual .bar-fill { transition: width .55s ease-out; }
+}
+@keyframes phase-reveal {
+  from { transform: translateY(4px); filter: brightness(1.35); }
+  to { transform: translateY(0); filter: brightness(1); }
+}
+@media print {
+  .phase-controls { display: none; }
+  .visual .phase-pending { opacity: 1; }
+  .visual .phase-active { outline: none; }
+}
