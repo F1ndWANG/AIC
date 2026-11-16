@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" role="img">
+<title>Agent 评估、统计与故障定位</title>
+<rect width="760" height="360" rx="20" fill="#080e1b"/>
+<g font-family="system-ui, sans-serif">
+<text x="26" y="43" fill="#f0f5ff" font-size="25" font-weight="700">Agent 评估、统计与故障定位</text>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="1;0;0;0;0;0;1" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="95" fill="#f0f5ff" font-size="19">01 · 明确任务成功条件</text>
+<text x="40" y="123" fill="#b1c2d7" font-size="13">检查文件、行数及唯一订单 ID</text>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="64" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;1;0;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="95" fill="#f0f5ff" font-size="19">02 · 逐步故障归因</text>
+<text x="400" y="123" fill="#b1c2d7" font-size="13">核对计划、工具、参数、观察和验收</text>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;1;0;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="189" fill="#f0f5ff" font-size="19">03 · 配对比较</text>
+<text x="40" y="217" fill="#b1c2d7" font-size="13">6 个任务由失败变成功，2 个相反</text>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="158" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;1;0;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="189" fill="#f0f5ff" font-size="19">04 · 随机性与重复运行</text>
+<text x="400" y="217" fill="#b1c2d7" font-size="13">得到 3 成功、2 失败</text>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="26" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;1;0;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="40" y="283" fill="#f0f5ff" font-size="19">05 · 按预算比较</text>
+<text x="40" y="311" fill="#b1c2d7" font-size="13">固定最多 8 次重新评估</text>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="#142339" stroke="#365467"/>
+<rect x="386" y="252" width="348" height="79" rx="10" fill="none" stroke="#7ce7ff" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;0;0;0;0;1;0" keyTimes="0;0.166667;0.333333;0.5;0.666667;0.833333;1" calcMode="discrete" dur="15s" repeatCount="indefinite"/></rect>
+<text x="400" y="283" fill="#f0f5ff" font-size="19">06 · 回归与人工校准</text>
+<text x="400" y="311" fill="#b1c2d7" font-size="13">抽查关键分歧任务</text>
+</g>
+</svg>
