@@ -51,6 +51,7 @@ function renderVisual(visual) {
         panel.append(line);
         phases.push({
           node: line,
+          title: row.label,
           narration: `${row.label}从 ${row.before}% 变为 ${row.value}%`,
           draw(active) {
             fill.style.width = (active ? row.value : row.before) + "%";
@@ -65,7 +66,7 @@ function renderVisual(visual) {
         item.append(element("span", "token-label", token.label),
           element("small", "", token.active ? "计入" : "忽略"));
         list.append(item);
-        phases.push({ node: item, narration: `${token.label}${token.active ? "计入损失" : "不计入损失"}` });
+        phases.push({ node: item, title: token.label, narration: `${token.label}${token.active ? "计入损失" : "不计入损失"}` });
       }
       panel.append(list);
       break;
@@ -75,7 +76,7 @@ function renderVisual(visual) {
       for (const [index, step] of visual.steps.entries()) {
         const node = element("li", "", step);
         list.append(node);
-        phases.push({ node, narration: visual.narrations?.[index] ?? step });
+        phases.push({ node, title: step, narration: visual.narrations?.[index] ?? step });
       }
       panel.append(list);
       if (visual.scenes?.length === visual.steps.length) {
@@ -123,7 +124,7 @@ function renderVisual(visual) {
         line.append(element("span", "branch-condition", row.condition), arrow,
           element("span", "branch-action", row.action));
         panel.append(line);
-        phases.push({ node: line, narration: `遇到「${row.condition}」，执行「${row.action}」` });
+        phases.push({ node: line, title: row.condition, narration: `遇到「${row.condition}」，执行「${row.action}」` });
       }
       break;
     case "pairs":
@@ -131,7 +132,7 @@ function renderVisual(visual) {
         const line = element("div", row.active ? "pair chosen" : "pair rejected");
         line.append(element("span", "pair-label", row.label), element("span", "", row.value));
         panel.append(line);
-        phases.push({ node: line, narration: `${row.label} · ${row.value}` });
+        phases.push({ node: line, title: row.label, narration: `${row.label} · ${row.value}` });
       }
       break;
   }
@@ -150,7 +151,23 @@ function renderPhaseControls(phases, showScene) {
   const forward = element("button", "", "演示机制");
   back.type = forward.type = "button";
   back.disabled = true;
-  controls.append(explanation, back, forward);
+  const timeline = element("div", "phase-timeline");
+  timeline.setAttribute("role", "group");
+  timeline.setAttribute("aria-label", "跳转到讲解帧");
+  const transcript = element("details", "phase-transcript");
+  const transcriptList = element("ol");
+  transcript.append(element("summary", "", "查看逐帧讲义"), transcriptList);
+  const frameButtons = phases.map((phase, index) => {
+    const button = element("button", "phase-jump", String(index + 1));
+    button.type = "button";
+    button.setAttribute("aria-label", `第 ${index + 1} 帧 · ${phase.title}`);
+    button.title = phase.title;
+    button.addEventListener("click", () => manualPhase(index));
+    timeline.append(button);
+    transcriptList.append(element("li", "", phase.narration));
+    return button;
+  });
+  controls.append(explanation, back, forward, timeline, transcript);
 
   let index = -1;
   function showPhase(next) {
@@ -160,6 +177,8 @@ function renderPhaseControls(phases, showScene) {
       const active = position === index;
       phase.node.classList.toggle("phase-pending", position > index);
       phase.node.classList.toggle("phase-active", active);
+      if (active) frameButtons[position].setAttribute("aria-current", "step");
+      else frameButtons[position].removeAttribute("aria-current");
       phase.draw?.(position <= index);
     }
     explanation.textContent = `${index + 1} / ${phases.length} · ${phases[index].narration}`;
