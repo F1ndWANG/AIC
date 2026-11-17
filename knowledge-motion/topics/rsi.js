@@ -10,7 +10,7 @@ window.knowledgeTopics.push({
       "subtitle": "为什么一开始要尝试不同类型的任务？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "起点",
           "覆盖操作",
@@ -20,6 +20,50 @@ window.knowledgeTopics.push({
           "教学场景：调查一个新的订单后台。初始记忆 M₀ 为空。",
           "Curriculum 给出筛选、翻页、导出三类任务。并行尝试共享同一初始记忆。",
           "一批任务执行并经验证后，再合并各任务的操作发现。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "任务范围",
+              "value": "新订单后台"
+            },
+            {
+              "label": "记忆版本",
+              "value": "M₀"
+            },
+            {
+              "label": "本轮进度",
+              "value": "准备探索"
+            }
+          ],
+          [
+            {
+              "label": "任务范围",
+              "value": "筛选、翻页、导出"
+            },
+            {
+              "label": "记忆版本",
+              "value": "共享 M₀"
+            },
+            {
+              "label": "本轮进度",
+              "value": "并行尝试"
+            }
+          ],
+          [
+            {
+              "label": "任务范围",
+              "value": "筛选、翻页、导出"
+            },
+            {
+              "label": "记忆版本",
+              "value": "验证后合并"
+            },
+            {
+              "label": "本轮进度",
+              "value": "记录操作经验"
+            }
+          ]
         ]
       },
       "description": "",
@@ -38,7 +82,7 @@ window.knowledgeTopics.push({
       "subtitle": "Actor 怎样把记忆变成环境中的动作？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "读取",
           "行动",
@@ -48,6 +92,50 @@ window.knowledgeTopics.push({
           "任务要求导出全部订单。可用经验只提到“先应用筛选”。",
           "Actor 执行筛选与导出，工具返回文件路径。",
           "产生实际 CSV，记录动作与文件。此时还需独立检查内容。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "输入",
+              "value": "导出全部订单"
+            },
+            {
+              "label": "可用经验",
+              "value": "先应用筛选"
+            },
+            {
+              "label": "环境产物",
+              "value": "尚未生成"
+            }
+          ],
+          [
+            {
+              "label": "输入",
+              "value": "导出全部订单"
+            },
+            {
+              "label": "可用经验",
+              "value": "已执行筛选和导出"
+            },
+            {
+              "label": "环境产物",
+              "value": "工具返回路径"
+            }
+          ],
+          [
+            {
+              "label": "输入",
+              "value": "导出全部订单"
+            },
+            {
+              "label": "可用经验",
+              "value": "动作记录已保存"
+            },
+            {
+              "label": "环境产物",
+              "value": "实际 CSV，待验收"
+            }
+          ]
         ]
       },
       "description": "",
@@ -66,7 +154,7 @@ window.knowledgeTopics.push({
       "subtitle": "怎样发现一个成功返回的工具结果其实没有完成任务？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "验收条件",
           "检查产物",
@@ -76,6 +164,50 @@ window.knowledgeTopics.push({
           "目标是 128 个唯一订单 ID，不能只验文件存在。",
           "Verifier 读取 CSV，得到 80 个符合条件的唯一 ID，缺少 48 个。",
           "将缺失作为可核验反馈交给 Actor，供后续定位原因。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "应有唯一 ID",
+              "value": "128"
+            },
+            {
+              "label": "实有唯一 ID",
+              "value": "待读取"
+            },
+            {
+              "label": "验收",
+              "value": "待核验"
+            }
+          ],
+          [
+            {
+              "label": "应有唯一 ID",
+              "value": "128"
+            },
+            {
+              "label": "实有唯一 ID",
+              "value": "80"
+            },
+            {
+              "label": "验收",
+              "value": "缺 48 条"
+            }
+          ],
+          [
+            {
+              "label": "应有唯一 ID",
+              "value": "128"
+            },
+            {
+              "label": "实有唯一 ID",
+              "value": "80"
+            },
+            {
+              "label": "验收",
+              "value": "失败，反馈给 Actor"
+            }
+          ]
         ]
       },
       "description": "",
@@ -94,7 +226,7 @@ window.knowledgeTopics.push({
       "subtitle": "怎样把一次成功修复变成可复用的记忆？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "观察",
           "提炼",
@@ -104,6 +236,50 @@ window.knowledgeTopics.push({
           "首次只导出第一页。补齐分页后验收通过，日志显示最后一页没有续页游标。",
           "记录可验证规则：此接口仍有 next_cursor 时继续，游标为空时停止。",
           "写入 M₁ 时附上适用接口和证据，避免把固定页数当成规则。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "观察",
+              "value": "漏掉后续页"
+            },
+            {
+              "label": "规则",
+              "value": "未提炼"
+            },
+            {
+              "label": "记忆版本",
+              "value": "M₀"
+            }
+          ],
+          [
+            {
+              "label": "观察",
+              "value": "末页没有续页游标"
+            },
+            {
+              "label": "规则",
+              "value": "有 next_cursor 就继续"
+            },
+            {
+              "label": "记忆版本",
+              "value": "M₀"
+            }
+          ],
+          [
+            {
+              "label": "观察",
+              "value": "验收通过"
+            },
+            {
+              "label": "规则",
+              "value": "附接口与证据"
+            },
+            {
+              "label": "记忆版本",
+              "value": "M₁"
+            }
+          ]
         ]
       },
       "description": "",
@@ -122,7 +298,7 @@ window.knowledgeTopics.push({
       "subtitle": "发现漏页后，该追加什么训练任务？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "定位缺口",
           "定向练习",
@@ -132,6 +308,50 @@ window.knowledgeTopics.push({
           "依据验证反馈，把问题缩小到分页，而不是泛泛地重做报表。",
           "安排 2 页和 5 页的练习，检查停止条件在不同页数下是否成立。",
           "用验证后的分页经验再试目标流程，检查行数与去重。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "缺口",
+              "value": "翻页遗漏"
+            },
+            {
+              "label": "练习",
+              "value": "待安排"
+            },
+            {
+              "label": "验证",
+              "value": "目标流程不通过"
+            }
+          ],
+          [
+            {
+              "label": "缺口",
+              "value": "翻页遗漏"
+            },
+            {
+              "label": "练习",
+              "value": "分别试 2 页和 5 页"
+            },
+            {
+              "label": "验证",
+              "value": "检查终止条件"
+            }
+          ],
+          [
+            {
+              "label": "缺口",
+              "value": "使用已验证规则"
+            },
+            {
+              "label": "练习",
+              "value": "回到目标流程"
+            },
+            {
+              "label": "验证",
+              "value": "检查行数与唯一 ID"
+            }
+          ]
         ]
       },
       "description": "",
@@ -150,7 +370,7 @@ window.knowledgeTopics.push({
       "subtitle": "怎样判断收益来自记忆而非测试时继续练习？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "冻结",
           "对照",
@@ -160,6 +380,54 @@ window.knowledgeTopics.push({
           "冻结旧版 M₀ 与新版 M₁，正式测试不启动 Curriculum 或更新记忆。",
           "相同未见任务、模型、工具和预算下分别运行。教学例旧版成功 4/10，新版 7/10。",
           "净变化为 +30 个百分点；同时查看新增成功、原本成功却退化的任务与调用成本。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "旧版",
+              "value": "M₀，只读"
+            },
+            {
+              "label": "新版",
+              "value": "M₁，只读"
+            },
+            {
+              "label": "差异",
+              "value": "同一批未见任务"
+            }
+          ],
+          [
+            {
+              "label": "旧版",
+              "value": "4 / 10",
+              "meter": 40
+            },
+            {
+              "label": "新版",
+              "value": "7 / 10",
+              "meter": 70
+            },
+            {
+              "label": "差异",
+              "value": "教学数据"
+            }
+          ],
+          [
+            {
+              "label": "旧版",
+              "value": "40%",
+              "meter": 40
+            },
+            {
+              "label": "新版",
+              "value": "70%",
+              "meter": 70
+            },
+            {
+              "label": "差异",
+              "value": "+30 个百分点"
+            }
+          ]
         ]
       },
       "description": "",

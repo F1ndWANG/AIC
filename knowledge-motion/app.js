@@ -32,6 +32,7 @@ function renderVisual(visual) {
   const panel = element("div", "visual");
   panel.append(element("p", "visual-label", visual.label));
   const phases = [];
+  let showScene;
 
   switch (visual.type) {
     case "bars":
@@ -76,6 +77,32 @@ function renderVisual(visual) {
         phases.push({ node, narration: visual.narrations?.[index] ?? step });
       }
       panel.append(list);
+      if (visual.scenes?.length === visual.steps.length) {
+        const stage = element("div", "lesson-stage");
+        const layer = element("dl", "lesson-cells");
+        stage.append(layer);
+        panel.append(stage);
+        showScene = (index, previous) => {
+          const before = visual.scenes[previous];
+          layer.replaceChildren(...visual.scenes[index].map((cell, position) => {
+            const old = before?.[position];
+            const changed = old && (old.value !== cell.value || old.label !== cell.label);
+            const tile = element("div", changed ? "lesson-cell lesson-changed" : "lesson-cell");
+            tile.append(element("dt", "", cell.label), element("dd", "", cell.value));
+            if (cell.meter !== undefined) {
+              const track = element("span", "lesson-track");
+              track.setAttribute("aria-hidden", "true");
+              const fill = element("span", "lesson-fill");
+              fill.style.setProperty("--from", old?.meter !== undefined ? old.meter / 100 : 0);
+              fill.style.setProperty("--to", cell.meter / 100);
+              track.append(fill);
+              tile.append(track);
+            }
+            return tile;
+          }));
+        };
+        showScene(0);
+      }
       break;
     }
     case "branches":
@@ -100,11 +127,11 @@ function renderVisual(visual) {
   }
 
   if (visual.caption) panel.append(element("p", "visual-caption", visual.caption));
-  if (phases.length) panel.append(renderPhaseControls(phases));
+  if (phases.length) panel.append(renderPhaseControls(phases, showScene));
   return panel;
 }
 
-function renderPhaseControls(phases) {
+function renderPhaseControls(phases, showScene) {
   const controls = element("div", "phase-controls");
   const explanation = element("p", "phase-explanation");
   explanation.setAttribute("role", "status");
@@ -116,6 +143,7 @@ function renderPhaseControls(phases) {
 
   let index = -1;
   function showPhase(next) {
+    showScene?.(next, index);
     index = next;
     for (const [position, phase] of phases.entries()) {
       const active = position === index;

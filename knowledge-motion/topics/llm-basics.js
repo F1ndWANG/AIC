@@ -10,7 +10,7 @@ window.knowledgeTopics.push({
       "subtitle": "同样长的两段文字会有同样多的 Token 吗？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "输入",
           "规则",
@@ -20,6 +20,50 @@ window.knowledgeTopics.push({
           "教学词表含 unf、air、ness，输入 unfairness。",
           "假设该分词器按已学合并规则切成 unf / air / ness。词表为这三项分别分配 ID 17、42、9。",
           "模型接收 [17,42,9]，原字符串 10 个字符、这里是 3 个 Token。ID 仅为教学示意。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "文本",
+              "value": "unfairness"
+            },
+            {
+              "label": "片段",
+              "value": "待切分"
+            },
+            {
+              "label": "模型输入",
+              "value": "待编码"
+            }
+          ],
+          [
+            {
+              "label": "文本",
+              "value": "unfairness"
+            },
+            {
+              "label": "片段",
+              "value": "unf / air / ness"
+            },
+            {
+              "label": "模型输入",
+              "value": "待编码"
+            }
+          ],
+          [
+            {
+              "label": "文本",
+              "value": "10 个字符"
+            },
+            {
+              "label": "片段",
+              "value": "3 个 Token"
+            },
+            {
+              "label": "模型输入",
+              "value": "[17, 42, 9]"
+            }
+          ]
         ]
       },
       "description": "",
@@ -38,7 +82,7 @@ window.knowledgeTopics.push({
       "subtitle": "同一词出现两次，模型如何区分先后？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "查表",
           "加位置",
@@ -48,6 +92,50 @@ window.knowledgeTopics.push({
           "输入 ID [42,7,42]。第 1 和第 3 个位置都先查同一张表的第 42 行。",
           "以原始 Transformer 的加法位置编码为例，两处分别加 P₁、P₃。",
           "得到 E₄₂+P₁ 和 E₄₂+P₃，同一 Token 可带不同位置信息。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "位置 1",
+              "value": "ID 42"
+            },
+            {
+              "label": "位置 2",
+              "value": "ID 7"
+            },
+            {
+              "label": "位置 3",
+              "value": "ID 42"
+            }
+          ],
+          [
+            {
+              "label": "位置 1",
+              "value": "E₄₂ + P₁"
+            },
+            {
+              "label": "位置 2",
+              "value": "E₇ + P₂"
+            },
+            {
+              "label": "位置 3",
+              "value": "E₄₂ + P₃"
+            }
+          ],
+          [
+            {
+              "label": "位置 1",
+              "value": "同一词，较早"
+            },
+            {
+              "label": "位置 2",
+              "value": "中间位置"
+            },
+            {
+              "label": "位置 3",
+              "value": "同一词，较晚"
+            }
+          ]
         ]
       },
       "description": "",
@@ -66,7 +154,7 @@ window.knowledgeTopics.push({
       "subtitle": "为什么未来 Token 的高分也不会改变当前输出？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "准备",
           "掩码",
@@ -76,6 +164,57 @@ window.knowledgeTopics.push({
           "第 2 个位置对三个键的缩放分数为 [0,0,4]，对应的 V 值简化成 [2,8,20]。",
           "第 3 个位置在未来，把它的分数改为 −∞。Softmax 得到 [0.5,0.5,0]。",
           "输出为 0.5×2+0.5×8+0×20=5。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "第 1 个位置",
+              "value": "分数 0"
+            },
+            {
+              "label": "第 2 个位置",
+              "value": "分数 0"
+            },
+            {
+              "label": "未来位置",
+              "value": "分数 4"
+            }
+          ],
+          [
+            {
+              "label": "第 1 个位置",
+              "value": "权重 50%",
+              "meter": 50
+            },
+            {
+              "label": "第 2 个位置",
+              "value": "权重 50%",
+              "meter": 50
+            },
+            {
+              "label": "未来位置",
+              "value": "屏蔽后权重 0%",
+              "meter": 0
+            }
+          ],
+          [
+            {
+              "label": "第 1 个位置",
+              "value": "0.5 × 2 = 1"
+            },
+            {
+              "label": "第 2 个位置",
+              "value": "0.5 × 8 = 4"
+            },
+            {
+              "label": "未来位置",
+              "value": "0 × 20 = 0"
+            },
+            {
+              "label": "输出",
+              "value": "1 + 4 + 0 = 5"
+            }
+          ]
         ]
       },
       "description": "",
@@ -94,7 +233,7 @@ window.knowledgeTopics.push({
       "subtitle": "注意力、前馈和残差分别做什么？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "汇聚上下文",
           "逐位置变换",
@@ -104,6 +243,50 @@ window.knowledgeTopics.push({
           "三条 Token 向量构成 X。自注意力按权重混合可见位置，输出仍有三条向量。",
           "同一套前馈网络独立作用于每一位置，前馈层内部可以先扩维再投回模型维度。",
           "每个子层各有残差路径，把子层结果加回该子层的输入。原论文还在相加后做归一化。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "操作",
+              "value": "自注意力"
+            },
+            {
+              "label": "序列长度",
+              "value": "3 个位置"
+            },
+            {
+              "label": "作用范围",
+              "value": "跨可见位置"
+            }
+          ],
+          [
+            {
+              "label": "操作",
+              "value": "前馈网络"
+            },
+            {
+              "label": "序列长度",
+              "value": "3 个位置"
+            },
+            {
+              "label": "作用范围",
+              "value": "每个位置独立"
+            }
+          ],
+          [
+            {
+              "label": "操作",
+              "value": "每个子层内的残差"
+            },
+            {
+              "label": "序列长度",
+              "value": "3 个位置"
+            },
+            {
+              "label": "作用范围",
+              "value": "对应位置相加"
+            }
+          ]
         ]
       },
       "description": "",
@@ -122,7 +305,7 @@ window.knowledgeTopics.push({
       "subtitle": "词表概率怎样从两个分数算出来？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "取表示",
           "算分数",
@@ -132,6 +315,40 @@ window.knowledgeTopics.push({
           "用当前前缀最后位置的隐藏向量，计算下一位置的词表分数。",
           "假设教学小词表只有 A、B，分数分别为 ln 3 和 0。",
           "取指数得 3 和 1，除以总和 4，概率分别为 75% 和 25%。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "候选 A",
+              "value": "分数 ln 3"
+            },
+            {
+              "label": "候选 B",
+              "value": "分数 0"
+            }
+          ],
+          [
+            {
+              "label": "候选 A",
+              "value": "exp(ln 3) = 3"
+            },
+            {
+              "label": "候选 B",
+              "value": "exp(0) = 1"
+            }
+          ],
+          [
+            {
+              "label": "候选 A",
+              "value": "3 / 4 = 75%",
+              "meter": 75
+            },
+            {
+              "label": "候选 B",
+              "value": "1 / 4 = 25%",
+              "meter": 25
+            }
+          ]
         ]
       },
       "description": "",
@@ -150,7 +367,7 @@ window.knowledgeTopics.push({
       "subtitle": "为什么第二个生成词需要重看新增前缀？",
       "visual": {
         "type": "flow",
-        "label": "点击「演示机制」，逐步核对",
+        "label": "点击「演示机制」逐步观察",
         "steps": [
           "第 1 步",
           "第 2 步",
@@ -160,6 +377,50 @@ window.knowledgeTopics.push({
           "前缀为“今天”，解码器选出“下”。文本片段仅用来示意 Token。",
           "前缀更新为“今天下”，使用更新后的条件分布选出“雨”。",
           "前缀变为“今天下雨”。继续生成，直到遇到 EOS 或达到设置的生成上限。"
+        ],
+        "scenes": [
+          [
+            {
+              "label": "当前前缀",
+              "value": "今天"
+            },
+            {
+              "label": "选出 Token",
+              "value": "下"
+            },
+            {
+              "label": "更新后",
+              "value": "今天下"
+            }
+          ],
+          [
+            {
+              "label": "当前前缀",
+              "value": "今天下"
+            },
+            {
+              "label": "选出 Token",
+              "value": "雨"
+            },
+            {
+              "label": "更新后",
+              "value": "今天下雨"
+            }
+          ],
+          [
+            {
+              "label": "当前前缀",
+              "value": "今天下雨"
+            },
+            {
+              "label": "选出 Token",
+              "value": "EOS（示意）"
+            },
+            {
+              "label": "更新后",
+              "value": "生成结束"
+            }
+          ]
         ]
       },
       "description": "",
