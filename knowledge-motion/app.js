@@ -400,6 +400,19 @@ function renderWorkedExample(example) {
   forward.addEventListener("click", () => showFrame((frameIndex + 1) % example.frames.length));
   panel.append(heading, intro, predict, stageNav, canvas, controls);
   if (example.experiment) panel.append(renderExampleExperiment(example.experiment));
+  if (example.practice?.length) {
+    const practice = element("section", "example-predict");
+    practice.append(
+      element("h3", "example-question", "读日志，定位 RAG 故障"),
+      element("p", "example-intro", "四次运行都用了同一个问题。先找 A 第一次丢失的位置，或检查输出是否偏离了 A。再展开解析。")
+    );
+    for (const { trace, diagnosis } of example.practice) {
+      const item = element("details", "card-checks");
+      item.append(element("summary", "", trace), element("p", "", diagnosis));
+      practice.append(item);
+    }
+    panel.append(practice);
+  }
   showFrame(0);
 }
 
