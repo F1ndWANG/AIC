@@ -442,7 +442,8 @@ function renderTopic(topic) {
     card.append(headline);
     if (entry.subtitle) card.append(element("p", "card-subtitle", entry.subtitle));
     const reading = window.knowledgeReadingNotes?.[topic.id]?.[index];
-    if (reading) card.append(element("p", "card-subtitle card-reading", reading));
+    const explanation = typeof reading === "string" ? reading : reading?.explanation;
+    if (explanation) card.append(element("p", "card-subtitle card-reading", explanation));
     const { panel, player } = renderVisual(entry.visual);
     visualPlayers.push(player);
     card.append(panel);
@@ -465,6 +466,14 @@ function renderTopic(topic) {
         element("p", "", entry.checkpoint.answer)
       );
       card.append(details);
+    }
+    if (reading?.question) {
+      const practice = element("details", "card-checks card-practice");
+      practice.append(
+        element("summary", "", "练习 · " + reading.question),
+        element("p", "", reading.answer)
+      );
+      card.append(practice);
     }
     if (entry.checks?.length) {
       const details = element("details", "card-checks");
