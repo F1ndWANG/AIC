@@ -451,6 +451,10 @@ function renderTopic(topic) {
       const link = element("a", "card-source", entry.source.label);
       link.href = entry.source.url;
       card.append(link);
+    } else if (topic.sources?.length) {
+      const link = element("a", "card-source", "查看本章参考资料");
+      link.href = "#sources";
+      card.append(link);
     }
     cards.append(card);
   }
