@@ -302,3 +302,14 @@ a { color: var(--cyan); text-underline-offset: 3px; }
   from { transform: scaleX(var(--from)); }
   to { transform: scaleX(var(--to)); }
 }
+
+.lesson-slots { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; margin-top: 7px; }
+.lesson-slot { aspect-ratio: 1; border-radius: 2px; background: #233449; }
+.lesson-slot.filled { background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .lesson-slot.new { animation: slot-arrival .35s ease-out; }
+}
+@keyframes slot-arrival {
+  from { opacity: .35; transform: scale(.65); }
+  to { opacity: 1; transform: scale(1); }
+}

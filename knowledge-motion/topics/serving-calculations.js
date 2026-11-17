@@ -2,7 +2,7 @@ window.knowledgeTopics ??= [];
 window.knowledgeTopics.push({
   "id": "serving-calculations",
   "title": "推理显存与延迟实算",
-  "subtitle": "从一个 Token 的缓存算到并发预算，再区分首 Token、输出间隔和服务延迟。",
+  "subtitle": "从一个 Token 的缓存算到并发预算，再区分首 Token、输出间隔和服务延迟。示例数字为教学设定。",
   "cards": [
     {
       "color": "cyan",
@@ -53,15 +53,15 @@ window.knowledgeTopics.push({
           ]
         ]
       },
-      "description": "",
+      "description": "适用于各层 KV 规格相同、完整缓存所有已保留 Token 的简化模型。结果是全模型 K/V 张量载荷，未包含显存分片、页填充与实现开销。",
       "subtitle": "一个 Token 写进 KV Cache，要存多少字节？",
       "checkpoint": {
         "question": "如果只有 KV 的数据类型从 FP16 改为每元素 1 字节，载荷是多少？",
         "answer": "64 KiB/Token。这里仅算 K、V 张量，比例因子等额外开销另计。"
       },
       "source": {
-        "label": "PagedAttention 原论文",
-        "url": "https://arxiv.org/abs/2309.06180"
+        "label": "PagedAttention §2 · 自回归解码与 KV Cache",
+        "url": "https://arxiv.org/pdf/2309.06180#page=3"
       }
     },
     {
@@ -78,7 +78,7 @@ window.knowledgeTopics.push({
         "narrations": [
           "沿用 128 KiB/Token，设每条请求当前已有 4096 个缓存 Token，不共享前缀。",
           "8 条同长度请求同时还在缓存中。因此乘以 8。",
-          "如果在扣掉权重和工作区后，留给 KV 的预算是 8 GiB，理论载荷占一半。"
+          "扣除权重和工作区后，假设只给 KV 留 8 GiB。8 条请求的载荷占一半，按同样长度粗算，载荷上限是 16 条。"
         ],
         "scenes": [
           [
@@ -110,6 +110,10 @@ window.knowledgeTopics.push({
               "label": "已用比例",
               "value": "4 / 8 = 50%",
               "meter": 50.0
+            },
+            {
+              "label": "仅按 KV 载荷估算",
+              "value": "8 GiB ÷ 512 MiB = 16 条"
             }
           ]
         ]
@@ -118,11 +122,11 @@ window.knowledgeTopics.push({
       "subtitle": "8 GiB 的 KV 预算能容纳多少个长请求？",
       "checkpoint": {
         "question": "8 个并发请求都从 4096 增长到 8192 个已缓存 Token，还在 8 GiB 预算内吗？",
-        "answer": "理想载荷刚好 8 GiB。任何额外分页、元数据等开销都可能使实际占用超限。"
+        "answer": "仅 K/V 张量载荷恰好 8 GiB。实际能否放下需检查块容量、保留余量等。8192 若可被块长度整除，这些请求不会因此产生尾块空槽。"
       },
       "source": {
-        "label": "PagedAttention 原论文",
-        "url": "https://arxiv.org/abs/2309.06180"
+        "label": "PagedAttention §2 · 自回归解码与 KV Cache",
+        "url": "https://arxiv.org/pdf/2309.06180#page=3"
       }
     },
     {
@@ -139,19 +143,25 @@ window.knowledgeTopics.push({
         "narrations": [
           "假设每页能放 16 个 Token。先装满前两页，计 32 个。",
           "第 33 个必须新增一页。于是第三页只填了 1 个槽。",
-          "总容量是 48 个槽，已用 33 个，末页还有 15 个空槽。"
+          "三块共有 48 个槽位；填了 33 个，末块剩余 15 个。后续 Token 可以继续填这些槽。"
         ],
         "scenes": [
           [
             {
               "label": "页 1",
               "value": "16 / 16",
-              "meter": 100.0
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
               "label": "页 2",
               "value": "16 / 16",
-              "meter": 100.0
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
               "label": "剩余",
@@ -162,44 +172,69 @@ window.knowledgeTopics.push({
             {
               "label": "页 1",
               "value": "16 / 16",
-              "meter": 100.0
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
               "label": "页 2",
               "value": "16 / 16",
-              "meter": 100.0
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
               "label": "页 3",
               "value": "1 / 16",
-              "meter": 6.25
+              "slots": {
+                "used": 1,
+                "total": 16
+              }
             }
           ],
           [
             {
-              "label": "总容量",
-              "value": "3 × 16 = 48"
+              "label": "页 1",
+              "value": "16 / 16",
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
-              "label": "已用",
-              "value": "33"
+              "label": "页 2",
+              "value": "16 / 16",
+              "slots": {
+                "used": 16,
+                "total": 16
+              }
             },
             {
-              "label": "空余",
-              "value": "15"
+              "label": "页 3",
+              "value": "1 / 16",
+              "slots": {
+                "used": 1,
+                "total": 16
+              }
+            },
+            {
+              "label": "未用槽位",
+              "value": "48 − 33 = 15"
             }
           ]
         ]
       },
-      "description": "",
+      "description": "这里的一页指固定容量的 KV 块，16 是教学设定。空槽仍可供同一序列后续生成使用。",
       "subtitle": "33 个 Token 为什么会占 3 个页？",
       "checkpoint": {
         "question": "长度从 33 增长到 48，页数要增加吗？",
         "answer": "不增加。3 页合计放得下 48 个，到了 49 才需要第四页。"
       },
       "source": {
-        "label": "PagedAttention 原论文",
-        "url": "https://arxiv.org/abs/2309.06180"
+        "label": "PagedAttention §4.2–4.3 · 分块与按需分配",
+        "url": "https://arxiv.org/pdf/2309.06180#page=5"
       }
     },
     {
@@ -215,7 +250,7 @@ window.knowledgeTopics.push({
         ],
         "narrations": [
           "从请求发出到收到第 1 个 Token 是 350 ms，包含排队及首 Token 的生成和传输。",
-          "从第 1 个到第 101 个 Token 中间有 100 个间隔。假设平均 12 ms。",
+          "同一条请求从第 1 到第 101 个 Token 有 100 个间隔。这里假设这条请求的后续平均间隔为 12 ms。",
           "把首 Token 延迟与后续所有间隔相加，得到从请求到收到最后一个 Token 的时间。"
         ],
         "scenes": [
@@ -249,21 +284,21 @@ window.knowledgeTopics.push({
               "value": "1200 ms"
             },
             {
-              "label": "总耗时",
+              "label": "到最后一个 Token",
               "value": "1550 ms"
             }
           ]
         ]
       },
-      "description": "",
+      "description": "同一请求的到末 Token 时间 = TTFT + (输出 Token 数 − 1) × 该请求的平均后续间隔。不能把各自跨请求统计的 p95 直接代入等式求总耗时 p95。",
       "subtitle": "生成 101 个 Token，为什么只乘 100 个间隔？",
       "checkpoint": {
-        "question": "只输出一个 Token 时，端到端生成延迟是多少？",
+        "question": "只输出一个 Token 时，从发出请求到收到最后一个 Token 的耗时是多少？",
         "answer": "在本例口径下等于首 Token 延迟 350 ms，后面没有 Token 间隔。"
       },
       "source": {
-        "label": "PagedAttention 原论文",
-        "url": "https://arxiv.org/abs/2309.06180"
+        "label": "DistServe §2 · TTFT、TPOT 与 SLO",
+        "url": "https://arxiv.org/abs/2401.09670"
       }
     },
     {
@@ -310,6 +345,10 @@ window.knowledgeTopics.push({
             {
               "label": "每组查询头",
               "value": "4"
+            },
+            {
+              "label": "相对 KV 载荷",
+              "value": "待计算"
             }
           ],
           [
@@ -323,20 +362,20 @@ window.knowledgeTopics.push({
             },
             {
               "label": "相对 KV 载荷",
-              "value": "25%",
-              "meter": 25.0
+              "value": "8 / 32 = 25%",
+              "meter": 25
             }
           ]
         ]
       },
-      "description": "",
+      "description": "这里比较缓存中实际保存共享 KV 头的两种架构，并固定其他维度与精度。25% 仅指 K/V 张量载荷，不能推断峰值显存或延迟。",
       "subtitle": "GQA 为什么能减少 KV Cache 的张量载荷？",
       "checkpoint": {
         "question": "查询头保持 32，只把 KV 头从 32 改到 16，理想载荷是多少比例？",
         "answer": "是原来的一半。这里固定其他维度和精度，比较的是模型架构。"
       },
       "source": {
-        "label": "GQA 原论文",
+        "label": "GQA §2 与图 2 · 查询头分组共享 KV",
         "url": "https://arxiv.org/abs/2305.13245"
       }
     },
@@ -352,9 +391,9 @@ window.knowledgeTopics.push({
           "检查 B"
         ],
         "narrations": [
-          "教学目标是 p95 端到端延迟不超过 1.5 秒。比较同一负载定义下的两个实测点。",
+          "教学例自定义 SLO：同一种请求组合和到达负载下，p95 到末 Token 延迟不超过 1.5 秒。A、B 是假想测点。",
           "A 虽然每秒完成 60 个请求，但 p95 为 2.0 秒。",
-          "B 每秒完成 48 个请求，p95 为 1.1 秒。在给出的两个点里，只有 B 符合延迟门槛。"
+          "在这两个假想测点中，只有 B 满足 p95 延迟门槛。48 请求/秒是它的总完成吞吐。"
         ],
         "scenes": [
           [
@@ -397,26 +436,34 @@ window.knowledgeTopics.push({
           ]
         ]
       },
-      "description": "",
+      "description": "这个示例用自定义的端到端 p95 门槛筛选测点。DistServe 的 goodput 使用的是论文定义的 TTFT 与 TPOT 服务目标及达标比例。",
       "subtitle": "在延迟约束下，怎样决定哪个部署配置更合适？",
       "checkpoint": {
         "question": "如果 A 的 p95 降到 1.4 秒、吞吐仍为 60 请求/秒，该选谁？",
         "answer": "这两个测点都达标，A 吞吐更高。正式比较仍需用同一请求负载测多个点。"
       },
       "source": {
-        "label": "PagedAttention 原论文",
-        "url": "https://arxiv.org/abs/2309.06180"
+        "label": "DistServe §2 · TTFT、TPOT 与 SLO",
+        "url": "https://arxiv.org/abs/2401.09670"
       }
     }
   ],
   "sources": [
     {
-      "label": "PagedAttention 原论文",
-      "url": "https://arxiv.org/abs/2309.06180"
+      "label": "PagedAttention §2 · 自回归解码与 KV Cache",
+      "url": "https://arxiv.org/pdf/2309.06180#page=3"
     },
     {
-      "label": "GQA 原论文",
+      "label": "PagedAttention §4.2–4.3 · 分块与按需分配",
+      "url": "https://arxiv.org/pdf/2309.06180#page=5"
+    },
+    {
+      "label": "GQA §2 与图 2 · 查询头分组共享 KV",
       "url": "https://arxiv.org/abs/2305.13245"
+    },
+    {
+      "label": "DistServe §2 · TTFT、TPOT 与 SLO",
+      "url": "https://arxiv.org/abs/2401.09670"
     }
   ]
 });

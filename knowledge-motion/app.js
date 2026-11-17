@@ -86,7 +86,7 @@ function renderVisual(visual) {
           const before = visual.scenes[previous];
           layer.replaceChildren(...visual.scenes[index].map(cell => {
             const old = before?.find(item => item.label === cell.label);
-            const changed = before && (!old || old.value !== cell.value || old.meter !== cell.meter);
+            const changed = before && (!old || old.value !== cell.value || old.meter !== cell.meter || old.slots?.used !== cell.slots?.used || old.slots?.total !== cell.slots?.total);
             const tile = element("div", changed ? "lesson-cell lesson-changed" : "lesson-cell");
             tile.append(element("dt", "", cell.label), element("dd", "", cell.value));
             if (cell.meter !== undefined) {
@@ -97,6 +97,15 @@ function renderVisual(visual) {
               fill.style.setProperty("--to", cell.meter / 100);
               track.append(fill);
               tile.append(track);
+            }
+            if (cell.slots) {
+              const slots = element("span", "lesson-slots");
+              slots.setAttribute("aria-hidden", "true");
+              for (let i = 0; i < cell.slots.total; i++) {
+                const state = i >= cell.slots.used ? "empty" : i >= (old?.slots?.used ?? 0) ? "filled new" : "filled";
+                slots.append(element("span", "lesson-slot " + state));
+              }
+              tile.append(slots);
             }
             return tile;
           }));
