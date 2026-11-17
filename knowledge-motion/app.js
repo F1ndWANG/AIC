@@ -84,9 +84,9 @@ function renderVisual(visual) {
         panel.append(stage);
         showScene = (index, previous) => {
           const before = visual.scenes[previous];
-          layer.replaceChildren(...visual.scenes[index].map((cell, position) => {
-            const old = before?.[position];
-            const changed = old && (old.value !== cell.value || old.label !== cell.label);
+          layer.replaceChildren(...visual.scenes[index].map(cell => {
+            const old = before?.find(item => item.label === cell.label);
+            const changed = before && (!old || old.value !== cell.value || old.meter !== cell.meter);
             const tile = element("div", changed ? "lesson-cell lesson-changed" : "lesson-cell");
             tile.append(element("dt", "", cell.label), element("dd", "", cell.value));
             if (cell.meter !== undefined) {
