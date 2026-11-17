@@ -432,6 +432,17 @@ function renderTopic(topic) {
     visualPlayers.push(player);
     card.append(panel);
     if (entry.description) card.append(element("p", "description", entry.description));
+    if (entry.lessonNotes?.length) {
+      const details = element("details", "card-checks");
+      const list = element("ul");
+      for (const note of entry.lessonNotes) {
+        const item = element("li");
+        item.append(element("strong", "", note.title), document.createTextNode("　" + note.text));
+        list.append(item);
+      }
+      details.append(element("summary", "", "阅读讲义 · 原理与排错"), list);
+      card.append(details);
+    }
     if (entry.checkpoint) {
       const details = element("details", "card-checks card-checkpoint");
       details.append(
