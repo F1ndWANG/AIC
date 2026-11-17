@@ -70,10 +70,10 @@ function renderVisual(visual) {
     }
     case "flow": {
       const list = element("ol", "flow-list");
-      for (const step of visual.steps) {
+      for (const [index, step] of visual.steps.entries()) {
         const node = element("li", "", step);
         list.append(node);
-        phases.push({ node, narration: step });
+        phases.push({ node, narration: visual.narrations?.[index] ?? step });
       }
       panel.append(list);
       break;
@@ -334,7 +334,16 @@ function renderTopic(topic) {
     headline.append(number, document.createTextNode(entry.title));
     card.append(headline);
     if (entry.subtitle) card.append(element("p", "card-subtitle", entry.subtitle));
-    card.append(renderVisual(entry.visual), element("p", "description", entry.description));
+    card.append(renderVisual(entry.visual));
+    if (entry.description) card.append(element("p", "description", entry.description));
+    if (entry.checkpoint) {
+      const details = element("details", "card-checks card-checkpoint");
+      details.append(
+        element("summary", "", "自检 · " + entry.checkpoint.question),
+        element("p", "", entry.checkpoint.answer)
+      );
+      card.append(details);
+    }
     if (entry.checks?.length) {
       const details = element("details", "card-checks");
       const list = element("ul");
