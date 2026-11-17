@@ -441,6 +441,8 @@ function renderTopic(topic) {
     headline.append(number, document.createTextNode(entry.title));
     card.append(headline);
     if (entry.subtitle) card.append(element("p", "card-subtitle", entry.subtitle));
+    const reading = window.knowledgeReadingNotes?.[topic.id]?.[index];
+    if (reading) card.append(element("p", "card-subtitle card-reading", reading));
     const { panel, player } = renderVisual(entry.visual);
     visualPlayers.push(player);
     card.append(panel);
