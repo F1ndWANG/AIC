@@ -13,6 +13,7 @@ const progress = document.querySelector("#progress");
 const position = document.querySelector("#position");
 
 const defaultCardDuration = 5200;
+const visualPlayers = [];
 let currentTopic;
 let cardIndex = -1;
 let timer;
@@ -136,8 +137,9 @@ function renderVisual(visual) {
   }
 
   if (visual.caption) panel.append(element("p", "visual-caption", visual.caption));
-  if (phases.length) panel.append(renderPhaseControls(phases, showScene));
-  return panel;
+  const player = phases.length ? renderPhaseControls(phases, showScene) : null;
+  if (player) panel.append(player.controls);
+  return { panel, player };
 }
 
 function renderPhaseControls(phases, showScene) {
@@ -164,9 +166,27 @@ function renderPhaseControls(phases, showScene) {
     back.disabled = index === 0;
     forward.textContent = index === phases.length - 1 ? "从头演示" : "下一步";
   }
-  back.addEventListener("click", () => showPhase(index - 1));
-  forward.addEventListener("click", () => showPhase((index + 1) % phases.length));
-  return controls;
+  function manualPhase(next) {
+    stopPlayback();
+    showPhase(next);
+    if (visualPlayers[cardIndex] === player) {
+      remaining = player.duration(currentTopic.cards[cardIndex].durationMs);
+    }
+  }
+
+  const player = {
+    controls,
+    get index() { return index; },
+    get length() { return phases.length; },
+    show: showPhase,
+    duration(cardDuration = defaultCardDuration) {
+      const text = phases[index]?.narration ?? "";
+      return Math.max(cardDuration / phases.length, 3200, 50 * Array.from(text).length + 1200);
+    }
+  };
+  back.addEventListener("click", () => manualPhase(index - 1));
+  forward.addEventListener("click", () => manualPhase((index + 1) % phases.length));
+  return player;
 }
 
 function selectCard(index) {
@@ -209,11 +229,23 @@ function stopPlayback() {
 }
 
 function startPlayback() {
-  if (cardIndex < 0 || finished) selectCard(0);
+  const fresh = cardIndex < 0 || finished;
+  if (fresh) selectCard(0);
+  const player = visualPlayers[cardIndex];
+  if (player && (fresh || player.index < 0)) {
+    player.show(0);
+    remaining = player.duration(currentTopic.cards[cardIndex].durationMs);
+  }
   play.textContent = "暂停";
   startedAt = performance.now();
   timer = setTimeout(() => {
     timer = undefined;
+    if (player && player.index + 1 < player.length) {
+      player.show(player.index + 1);
+      remaining = player.duration(currentTopic.cards[cardIndex].durationMs);
+      startPlayback();
+      return;
+    }
     const nextIndex = cardIndex + 1;
     if (nextIndex === currentTopic.cards.length) {
       finished = true;
@@ -222,6 +254,11 @@ function startPlayback() {
       return;
     }
     selectCard(nextIndex);
+    const nextPlayer = visualPlayers[nextIndex];
+    if (nextPlayer) {
+      nextPlayer.show(0);
+      remaining = nextPlayer.duration(currentTopic.cards[nextIndex].durationMs);
+    }
     startPlayback();
   }, remaining / playbackRate);
 }
@@ -357,6 +394,7 @@ function renderTopic(topic) {
   document.querySelector("#note").textContent = topic.note ?? "";
   steps.replaceChildren();
   cards.replaceChildren();
+  visualPlayers.length = 0;
   for (const [index, entry] of topic.cards.entries()) {
     const button = element("button", "step", `${index + 1}. ${entry.title}`);
     button.type = "button";
@@ -371,7 +409,9 @@ function renderTopic(topic) {
     headline.append(number, document.createTextNode(entry.title));
     card.append(headline);
     if (entry.subtitle) card.append(element("p", "card-subtitle", entry.subtitle));
-    card.append(renderVisual(entry.visual));
+    const { panel, player } = renderVisual(entry.visual);
+    visualPlayers.push(player);
+    card.append(panel);
     if (entry.description) card.append(element("p", "description", entry.description));
     if (entry.checkpoint) {
       const details = element("details", "card-checks card-checkpoint");
