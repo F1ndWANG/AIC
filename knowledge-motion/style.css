@@ -321,3 +321,36 @@ a { color: var(--cyan); text-underline-offset: 3px; }
 .phase-transcript summary { cursor: pointer; }
 .phase-transcript ol { padding-left: 1.45rem; margin: 6px 0 0; }
 .phase-transcript li + li { margin-top: 4px; }
+
+.lesson-cell dd.lesson-before {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #38506a;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 400;
+}
+.phase-timeline { margin-inline-start: 0; flex: 1 0 100%; }
+.phase-timeline .phase-jump { text-align: left; line-height: 1.45; padding: 6px 9px; }
+.flow-list li { position: relative; }
+.flow-list li.phase-active { background: #18344a; box-shadow: inset 3px 0 var(--accent); }
+.flow-list li.phase-pending { background: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .lesson-changed { animation: lesson-update .6s ease-out both; animation-delay: var(--arrival, 0ms); }
+  .lesson-fill { animation-duration: .7s; }
+  .lesson-slot.new { animation-duration: .55s; }
+  .flow-list li { transition: opacity .3s, background .3s, box-shadow .3s; }
+  .branch.phase-active .branch-arrow { animation: branch-travel .6s ease-out; }
+  .token-list li.phase-active { animation: token-focus .55s ease-out; }
+}
+@keyframes branch-travel {
+  from { transform: translateX(-8px); opacity: .2; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes token-focus {
+  from { transform: translateY(5px) scale(.95); }
+  to { transform: translateY(0) scale(1); }
+}
+@media print {
+  .lesson-cell dd.lesson-before { color: #444; }
+}
