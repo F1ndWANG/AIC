@@ -91,6 +91,7 @@ function renderVisual(visual) {
             const changed = before && (!old || old.value !== cell.value || old.meter !== cell.meter || old.slots?.used !== cell.slots?.used || old.slots?.total !== cell.slots?.total);
             const tile = element("div", changed ? "lesson-cell lesson-changed" : "lesson-cell");
             tile.append(element("dt", "", cell.label), element("dd", "", cell.value));
+            tile.style.setProperty("--arrival", (visual.scenes[index].indexOf(cell) * 75) + "ms");
             if (cell.meter !== undefined) {
               const track = element("span", "lesson-track");
               track.setAttribute("aria-hidden", "true");
@@ -108,6 +109,9 @@ function renderVisual(visual) {
                 slots.append(element("span", "lesson-slot " + state));
               }
               tile.append(slots);
+            }
+            if (old && old.value !== cell.value) {
+              tile.append(element("dd", "lesson-before", "上一帧 · " + old.value));
             }
             return tile;
           }));
@@ -158,7 +162,7 @@ function renderPhaseControls(phases, showScene) {
   const transcriptList = element("ol");
   transcript.append(element("summary", "", "查看逐帧讲义"), transcriptList);
   const frameButtons = phases.map((phase, index) => {
-    const button = element("button", "phase-jump", String(index + 1));
+    const button = element("button", "phase-jump", String(index + 1) + " · " + phase.title);
     button.type = "button";
     button.setAttribute("aria-label", `第 ${index + 1} 帧 · ${phase.title}`);
     button.title = phase.title;
@@ -200,7 +204,7 @@ function renderPhaseControls(phases, showScene) {
     show: showPhase,
     duration(cardDuration = defaultCardDuration) {
       const text = phases[index]?.narration ?? "";
-      return Math.max(cardDuration / phases.length, 3200, 50 * Array.from(text).length + 1200);
+      return Math.max(cardDuration / phases.length, 4200, 65 * Array.from(text).length + 1600);
     }
   };
   back.addEventListener("click", () => manualPhase(index - 1));
