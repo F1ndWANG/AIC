@@ -298,10 +298,13 @@ function renderExampleExperiment(experiment) {
   const label = element("label", "", experiment.label);
   const slider = element("input");
   Object.assign(slider, { type: "range", min: experiment.min, max: experiment.max, value: experiment.initial });
+  if (experiment.step !== undefined) slider.step = experiment.step;
   const value = element("output", "example-slider-value");
   label.append(slider, value);
   const output = element("dl", "example-data");
   output.setAttribute("aria-live", "polite");
+  const diagram = element("div", "experiment-diagram");
+  const explanation = element("p", "example-reason");
   function update() {
     const input = Number(slider.value);
     value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
@@ -318,9 +321,20 @@ function renderExampleExperiment(experiment) {
         meter, element("dd", "example-before", detail));
       return tile;
     }));
+    if (experiment.diagram) {
+      const state = experiment.diagram(input);
+      diagram.replaceChildren(...state.items.map(item => {
+        const node = element("div", "experiment-item " + item.state);
+        node.append(element("strong", "", item.label), element("span", "", item.detail));
+        if (item.percent !== undefined) node.style.setProperty("--amount", item.percent + "%");
+        return node;
+      }));
+      explanation.textContent = state.explanation;
+    }
   }
   slider.addEventListener("input", update);
   panel.append(label, output);
+  if (experiment.diagram) panel.append(diagram, explanation);
   update();
   return panel;
 }
