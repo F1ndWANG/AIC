@@ -562,3 +562,69 @@ Object.assign(window.workedExamples, {
     ]
   }
 });
+
+// Interactive teaching examples use small, explicitly specified inputs.
+window.workedExamples["efficient-serving"].experiment.diagram = function (count) {
+  const pages = Math.ceil(count / 4);
+  return {
+    items: Array.from({ length: pages * 4 }, (_, index) => ({
+      label: String(index + 1),
+      detail: index < count ? "已写入" : "空槽",
+      state: index < count ? "occupied" : "vacant"
+    })),
+    explanation: count + " 个 Token 需要 " + pages + " 页，共 " + pages * 4 +
+      " 个槽位。最后一页空 " + (pages * 4 - count) + " 槽。拖过 4、8、12 的边界，观察整页分配怎样增加。这里仅展示单请求的逻辑页，物理页可以不连续。"
+  };
+};
+
+window.workedExamples["rag"].experiment = {
+  label: "候选数量 K · 先预测能否找到新版 A",
+  min: 1, max: 3, initial: 1, unit: "条",
+  compare(count) {
+    return [
+      ["检索候选数", count, "固定内积分数 B=3、A=2、C=1"],
+      ["通过适用性过滤的证据数", count >= 2 ? 1 : 0, "A 是当前问题唯一有效证据"]
+    ];
+  },
+  diagram(count) {
+    const docs = [
+      { label: "B · 旧版设备政策", detail: "14 天 · 已失效", state: "excluded" },
+      { label: "A · 新版设备政策", detail: "7 天 · 5 月适用", state: "accepted" },
+      { label: "C · 数字商品政策", detail: "商品类型不适用", state: "excluded" }
+    ];
+    return {
+      items: docs.map((doc, index) => index < count ? doc : {
+        label: doc.label, detail: "未进入 Top-" + count, state: "vacant"
+      }),
+      explanation: count === 1
+        ? "只召回 B，时效过滤后没有证据。此时应说明无法确认当前期限。把 K 调到 2，看看 A 何时进入生成器可使用的材料。"
+        : "A 已进入候选并通过过滤，可回答未拆封设备签收后 7 天内，引用 v2 §2。" +
+          (count === 3 ? "新增 C 也被召回，但它属于数字商品，被适用范围过滤掉；此例继续扩大 K 没有增加有效证据。" : "B 因已失效被排除。")
+    };
+  }
+};
+
+window.workedExamples["llm-basics"].experiment = {
+  label: "温度 T × 10 · 固定 logits 为 [0, ln 3]",
+  min: 2, max: 20, initial: 10, unit: "",
+  compare(value) {
+    const t = value / 10;
+    const b = 1 / (1 + Math.exp(-Math.log(3) / t));
+    return [
+      ["候选 A 的概率 %", (1 - b) * 100, "logit=0"],
+      ["候选 B 的概率 %", b * 100, "logit=ln 3"]
+    ];
+  },
+  diagram(value) {
+    const t = value / 10;
+    const b = 1 / (1 + Math.exp(-Math.log(3) / t));
+    return {
+      items: [
+        { label: "A", detail: ((1 - b) * 100).toFixed(1) + "%", percent: (1 - b) * 100, state: "probability" },
+        { label: "B", detail: (b * 100).toFixed(1) + "%", percent: b * 100, state: "probability" }
+      ],
+      explanation: "当前 T=" + t.toFixed(1) +
+        "。先用 T 除每个 logit，再做 softmax。T=1 时 A=25%、B=75%；降低温度会让分布更集中。B 在所有正温度下都排名第一。条形长度表示概率，采样结果仍有随机性。"
+    };
+  }
+};
