@@ -354,3 +354,19 @@ a { color: var(--cyan); text-underline-offset: 3px; }
 @media print {
   .lesson-cell dd.lesson-before { color: #444; }
 }
+
+.experiment-diagram { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin-top: 14px; }
+.experiment-item { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 65px; padding: 10px; border: 1px solid #3a5269; border-radius: 9px; background: #142638; overflow: hidden; overflow-wrap: anywhere; }
+.experiment-item span { color: var(--muted); font-size: .78rem; }
+.experiment-item.occupied, .experiment-item.accepted { border-color: var(--accent); background: #183c45; }
+.experiment-item.vacant { border-style: dashed; opacity: .6; }
+.experiment-item.excluded { border-color: #b98072; }
+.experiment-item.probability { grid-column: span 2; padding-bottom: 21px; }
+.experiment-item.probability::after { content: ""; position: absolute; left: 0; bottom: 0; height: 8px; width: var(--amount); background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .experiment-item { animation: experiment-arrival .35s ease-out; }
+  .experiment-item.probability::after { animation: experiment-fill .4s ease-out; }
+}
+@keyframes experiment-arrival { from { opacity: .3; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes experiment-fill { from { width: 0; } to { width: var(--amount); } }
+@media (max-width: 500px) { .experiment-diagram { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
