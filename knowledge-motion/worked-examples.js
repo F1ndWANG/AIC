@@ -810,3 +810,89 @@ window.workedExamples["serving-calculations"].experiment.diagram = function (req
       "预算已假设扣除权重与工作区，实际部署还要核对分页碎片、共享、调度和输出增长。"
   };
 };
+
+window.workedExamples["optimization-stability"].experiment = {
+  label: "改变全局梯度范数阈值 c · 原梯度 [3,4]，范数 5",
+  min: 1, max: 8, initial: 2, unit: "",
+  compare(threshold) {
+    const factor = Math.min(1, threshold / 5);
+    return [
+      ["裁剪后第一分量", 3 * factor, "所有分量使用相同缩放系数"],
+      ["裁剪后第二分量", 4 * factor, "方向保持不变"],
+      ["裁剪后范数", 5 * factor, "等于 min(5,c)"]
+    ];
+  },
+  diagram(threshold) {
+    const factor = Math.min(1, threshold / 5);
+    return {
+      items: [
+        { label: "原梯度 g", detail: "[3,4] · ||g||₂=5", state: "occupied" },
+        { label: "缩放因子", detail: "min(1,c/5)=" + factor.toFixed(2), state: "accepted" },
+        { label: "新梯度", detail: "[" + (3 * factor).toFixed(2) + "," + (4 * factor).toFixed(2) + "]", state: "accepted" },
+        { label: "是否裁剪", detail: threshold < 5 ? "范数超过阈值，整体缩小" : "未超过阈值，保留原梯度", state: threshold < 5 ? "excluded" : "occupied" }
+      ],
+      explanation: "先算 √(3²+4²)=5，再用 g′=g×min(1,c/5)。当前阈值 c=" + threshold +
+        "，结果范数为 " + (5 * factor).toFixed(2) +
+        "。c 从 4 增至 5 时结束裁剪；继续增大阈值也不会放大梯度。这里演示全局范数裁剪，实际多参数模型需要对全部被裁剪的梯度共同计算范数。"
+    };
+  }
+};
+
+window.workedExamples["model-compression"].experiment = {
+  label: "改变输入 x × 10 · 固定 scale=0.1，整数范围 [−7,7]",
+  min: -12, max: 12, initial: 3, unit: "",
+  compare(value) {
+    const input = value / 10;
+    const quantized = Math.max(-7, Math.min(7, Math.round(input / 0.1)));
+    const restored = quantized * 0.1;
+    return [
+      ["输入 x", input, "条长表示绝对值，标签保留正负号"],
+      ["反量化 x̂", restored, "x̂=0.1×q"],
+      ["绝对误差 |x−x̂|", Math.abs(input - restored), "本例在超出 [−0.7,0.7] 后出现饱和误差"]
+    ];
+  },
+  diagram(value) {
+    const quantized = Math.max(-7, Math.min(7, value));
+    return {
+      items: Array.from({ length: 15 }, (_, index) => ({
+        label: String(index - 7),
+        detail: ((index - 7) / 10).toFixed(1),
+        state: index - 7 === quantized ? "accepted" : "vacant"
+      })),
+      explanation: "计算 q=clip(round(x/0.1),−7,7)，再计算 x̂=0.1q。输入 x=" +
+        (value / 10).toFixed(1) + " 落到整数 " + quantized + "，重构为 " +
+        (quantized / 10).toFixed(1) + "。高亮格是当前量化桶。" +
+        (Math.abs(value) > 7 ? "输入超出范围后会压在端点，继续扫参可以看见误差变大。" : "当前输入恰好位于 0.1 的网格上，量化误差在数值精度内为零。") +
+        "此例聚焦饱和边界；非网格输入还会产生舍入误差。"
+    };
+  }
+};
+
+window.workedExamples["context-engineering"].experiment = {
+  label: "改变历史对话长度 · 每步增加 256 Token",
+  min: 0, max: 12, initial: 6, unit: "步",
+  compare(steps) {
+    const input = 512 + 1024 + steps * 256;
+    return [
+      ["实际输入 Token", input, "系统指令 512 + 证据 1024 + 历史"],
+      ["输入预算 Token", 3584, "4096 总窗口 − 512 预留输出"],
+      ["超出输入预算 Token", Math.max(0, input - 3584), "超预算时需明确裁剪策略"]
+    ];
+  },
+  diagram(steps) {
+    const input = 1536 + steps * 256;
+    return {
+      items: [
+        { label: "系统指令", detail: "512 Token", state: "occupied" },
+        { label: "检索证据", detail: "1024 Token", state: "accepted" },
+        { label: "历史对话", detail: steps * 256 + " Token", state: input > 3584 ? "excluded" : "occupied" },
+        { label: "输出预留", detail: "512 Token", state: "vacant" }
+      ],
+      explanation: "固定窗口 4096 Token，并预留输出 512。历史为 " + steps * 256 +
+        " Token 时，输入合计 " + input + "。" +
+        (input > 3584 ? "输入超出 " + (input - 3584) + " Token，应先制定裁剪或摘要方案，再核对关键条件是否仍在实际输入中。" :
+          "输入还余 " + (3584 - input) + " Token。历史增加到第 8 步时恰好用满输入预算。") +
+        "红色仅标记预算压力来源，演示没有自动决定要丢弃哪段内容。"
+    };
+  }
+};
