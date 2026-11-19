@@ -320,26 +320,42 @@ function renderExampleExperiment(experiment) {
     const input = Number(slider.value);
     value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
     const rows = experiment.compare(input);
-    const max = Math.max(1, ...rows.map(([, amount]) => amount));
-    output.replaceChildren(...rows.map(([name, amount, detail]) => {
+    const magnitude = Math.max(1e-12, ...rows.map(([, amount]) => Math.abs(amount)));
+    if (output.children.length !== rows.length) {
+      output.replaceChildren(...rows.map(() => {
       const tile = element("div", "example-tile");
       const meter = element("div", "example-meter");
       const fill = element("span");
-      fill.style.width = `${100 * amount / max}%`;
       meter.setAttribute("aria-hidden", "true");
       meter.append(fill);
-      tile.append(element("dt", "", name), element("dd", "example-value", Number(amount.toFixed(2))),
-        meter, element("dd", "example-before", detail));
+      tile.append(element("dt"), element("dd", "example-value"),
+        meter, element("dd", "example-before"));
       return tile;
-    }));
+      }));
+    }
+    rows.forEach(([name, amount, detail], index) => {
+      const tile = output.children[index];
+      tile.children[0].textContent = name;
+      tile.children[1].textContent = Number(amount.toFixed(experiment.precision ?? 2));
+      tile.children[2].children[0].style.width = `${100 * Math.abs(amount) / magnitude}%`;
+      tile.children[3].textContent = detail;
+    });
     if (experiment.diagram) {
       const state = experiment.diagram(input);
-      diagram.replaceChildren(...state.items.map(item => {
-        const node = element("div", "experiment-item " + item.state);
-        node.append(element("strong", "", item.label), element("span", "", item.detail));
-        if (item.percent !== undefined) node.style.setProperty("--amount", item.percent + "%");
-        return node;
-      }));
+      if (diagram.children.length !== state.items.length) {
+        diagram.replaceChildren(...state.items.map(() => {
+          const node = element("div", "experiment-item");
+          node.append(element("strong"), element("span"));
+          return node;
+        }));
+      }
+      state.items.forEach((item, index) => {
+        const node = diagram.children[index];
+        node.className = "experiment-item " + item.state;
+        node.children[0].textContent = item.label;
+        node.children[1].textContent = item.detail;
+        node.style.setProperty("--amount", (item.percent ?? 0) + "%");
+      });
       explanation.textContent = state.explanation;
     }
   }
