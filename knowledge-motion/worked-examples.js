@@ -691,3 +691,53 @@ window.workedExamples["rsi-paired-eval"].experiment.diagram = function (gains) {
       " 个百分点。新增收益再大，任务 9 的回归仍需单独排查。这些数量都是教学设定。"
   };
 };
+
+window.workedExamples["dpo-calculations"].experiment.diagram = function (logit) {
+  const probability = 1 / (1 + Math.exp(-logit));
+  return {
+    items: [
+      { label: "校正差值 z", detail: String(logit) + " · β=1", state: "occupied" },
+      { label: "σ(z)", detail: (100 * probability).toFixed(1) + "%", percent: probability * 100, state: "probability" },
+      { label: "原标签损失", detail: Math.log1p(Math.exp(-logit)).toFixed(3), state: logit >= 0 ? "accepted" : "excluded" },
+      { label: "互换标签损失", detail: Math.log1p(Math.exp(logit)).toFixed(3), state: logit <= 0 ? "accepted" : "excluded" }
+    ],
+    explanation: "先计算 z=β×[(logπ(A)−logπ(B))−(logπref(A)−logπref(B))]，再取 −logσ(z)。当前 z=" +
+      logit + "。原标签损失为 " + Math.log1p(Math.exp(-logit)).toFixed(3) +
+      "，互换标签后 z 取反，损失变为 " + Math.log1p(Math.exp(logit)).toFixed(3) +
+      "。扫过 z=0 时，两条损失都等于 ln2≈0.693。σ(z) 是偏好目标中的变换值，不能当作实际任务正确率。"
+  };
+};
+
+window.workedExamples["sft-peft"].experiment.diagram = function (rank) {
+  return {
+    items: [
+      { label: "低秩矩阵 A", detail: rank + "×8 = " + rank * 8 + " 参数 · 可训练", state: "accepted" },
+      { label: "低秩矩阵 B", detail: "8×" + rank + " = " + rank * 8 + " 参数 · 可训练", state: "accepted" },
+      { label: "BA 的形状", detail: "8×8 · 秩至多 " + rank, state: "occupied" },
+      { label: "基座矩阵 W", detail: "8×8 = 64 参数 · 冻结", state: "vacant" }
+    ],
+    explanation: "本例使用列向量，增量 ΔW=BA，A∈R^(r×8)、B∈R^(8×r)。适配器参数共 16r=" +
+      rank * 16 + "，完整矩阵有 64 个参数。" +
+      (rank < 4 ? "当前适配器参数少于完整矩阵。" : rank === 4 ? "r=4 时两者参数数目相同。" : "当前适配器参数已多于完整矩阵；秩越大，可训练参数越多。") +
+      "这是 8×8 教学矩阵的计数，实际模型有多层和不同的适配目标，还可能有缩放或偏置项。"
+  };
+};
+
+window.workedExamples["speculative-sampling"].experiment.diagram = function (draftA) {
+  const acceptedA = Math.min(draftA, 60);
+  const acceptedB = Math.min(100 - draftA, 40);
+  const rejected = 100 - acceptedA - acceptedB;
+  return {
+    items: [
+      { label: "验收路径 → A", detail: acceptedA + "% 概率质量", percent: acceptedA, state: "probability" },
+      { label: "验收路径 → B", detail: acceptedB + "% 概率质量", percent: acceptedB, state: "probability" },
+      { label: "拒绝修正路径", detail: rejected === 0 ? "0% · 无需修正" : rejected + "% → " + (draftA < 60 ? "A" : "B"), state: rejected ? "accepted" : "vacant" },
+      { label: "最终分布", detail: "A=60% · B=40%", state: "occupied" }
+    ],
+    explanation: "目标固定 p(A)=0.6，草稿 q(A)=" + (draftA / 100).toFixed(2) +
+      "。验收质量逐项取 min(p,q)，共 " + (acceptedA + acceptedB) +
+      "%。剩余 " + rejected + "% 进入拒绝分支，按 max(p−q,0) 的归一化分布补偿。" +
+      (draftA === 60 ? "本例两分布一致，全部验收。" : draftA < 60 ? "草稿给 A 的质量不足，拒绝分支只补给 A。" : "草稿给 B 的质量不足，拒绝分支只补给 B。") +
+      "最终总分布始终是目标的 [0.6,0.4]；图中展示的是多次采样的路径概率。"
+  };
+};
