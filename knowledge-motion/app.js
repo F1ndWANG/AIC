@@ -335,6 +335,20 @@ function renderExampleExperiment(experiment) {
   slider.addEventListener("input", update);
   panel.append(label, output);
   if (experiment.diagram) panel.append(diagram, explanation);
+  const controls = element("div", "example-controls");
+  for (const [caption, direction] of [["减小参数", -1], ["增大参数", 1], ["重置", 0]]) {
+    const button = element("button", "", caption);
+    button.type = "button";
+    button.addEventListener("click", () => {
+      const increment = Number(experiment.step ?? 1);
+      slider.value = direction
+        ? Math.max(experiment.min, Math.min(experiment.max, Number(slider.value) + direction * increment))
+        : experiment.initial;
+      update();
+    });
+    controls.append(button);
+  }
+  panel.append(controls);
   update();
   return panel;
 }
