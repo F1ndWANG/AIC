@@ -307,6 +307,10 @@ function renderExampleExperiment(experiment) {
   const diagram = element("div", "experiment-diagram");
   const explanation = element("p", "example-reason");
   const sweep = element("button", "", "自动扫参");
+  const history = element("div", "experiment-history");
+  history.setAttribute("role", "group");
+  history.setAttribute("aria-label", "最近六次参数结果，点击回看");
+  const snapshots = [];
   sweep.type = "button";
   let sweepTimer;
   function stopSweep() {
@@ -316,21 +320,21 @@ function renderExampleExperiment(experiment) {
     sweep.setAttribute("aria-pressed", "false");
   }
   stopExperimentPlayback = stopSweep;
-  function update() {
+  function update(record = true) {
     const input = Number(slider.value);
     value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
     const rows = experiment.compare(input);
     const magnitude = Math.max(1e-12, ...rows.map(([, amount]) => Math.abs(amount)));
     if (output.children.length !== rows.length) {
       output.replaceChildren(...rows.map(() => {
-      const tile = element("div", "example-tile");
-      const meter = element("div", "example-meter");
-      const fill = element("span");
-      meter.setAttribute("aria-hidden", "true");
-      meter.append(fill);
-      tile.append(element("dt"), element("dd", "example-value"),
-        meter, element("dd", "example-before"));
-      return tile;
+        const tile = element("div", "example-tile");
+        const meter = element("div", "example-meter");
+        const fill = element("span");
+        meter.setAttribute("aria-hidden", "true");
+        meter.append(fill);
+        tile.append(element("dt"), element("dd", "example-value"),
+          meter, element("dd", "example-before"));
+        return tile;
       }));
     }
     rows.forEach(([name, amount, detail], index) => {
@@ -358,6 +362,24 @@ function renderExampleExperiment(experiment) {
       });
       explanation.textContent = state.explanation;
     }
+    if (record && snapshots.at(-1)?.input !== input) {
+      snapshots.push({ input, result: rows.map(([name, amount]) =>
+        name + " " + Number(amount.toFixed(experiment.precision ?? 2))).join(" · ") });
+      if (snapshots.length > 6) snapshots.shift();
+    }
+    history.replaceChildren(...snapshots.map(snapshot => {
+      const button = element("button", "experiment-snapshot");
+      button.type = "button";
+      button.append(element("strong", "", "参数 " + snapshot.input),
+        element("span", "", snapshot.result));
+      button.setAttribute("aria-pressed", String(snapshot.input === input));
+      button.addEventListener("click", () => {
+        stopSweep();
+        slider.value = snapshot.input;
+        update(false);
+      });
+      return button;
+    }));
   }
   slider.addEventListener("input", () => {
     stopSweep();
@@ -403,6 +425,7 @@ function renderExampleExperiment(experiment) {
     sweepTimer = setTimeout(advanceSweep, 1800);
   });
   controls.append(sweep);
+  panel.append(element("p", "visual-label", "最近六次结果 · 点击回看"), history);
   panel.append(controls);
   update();
   return panel;
