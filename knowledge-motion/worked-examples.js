@@ -628,3 +628,66 @@ window.workedExamples["llm-basics"].experiment = {
     };
   }
 };
+
+window.workedExamples["transformer-architecture"].experiment.diagram = function (futureValue) {
+  const futureWeight = Math.exp(4) / (2 + Math.exp(4));
+  const unmasked = 10 / (2 + Math.exp(4)) + futureWeight * futureValue;
+  return {
+    items: [
+      { label: "位置 1", detail: "V=2 · 有掩码权重 50%", percent: 50, state: "probability" },
+      { label: "位置 2", detail: "V=8 · 有掩码权重 50%", percent: 50, state: "probability" },
+      { label: "未来位置 3", detail: "V=" + futureValue + " · 有掩码权重 0%", state: "excluded" },
+      { label: "当前输出", detail: "有掩码 5；无掩码 " + unmasked.toFixed(2), state: "accepted" }
+    ],
+    explanation: "查询位于位置 2。本例 logits=[0,0,4]；因果掩码把位置 3 屏蔽后，softmax=[0.5,0.5,0]，输出恒为 0.5×2+0.5×8=5。关闭掩码时，未来项权重约 " +
+      (futureWeight * 100).toFixed(1) + "%，所以改变未来 V 会明显改变当前输出。这里修改 V，Q、K 及 logits 保持固定。"
+  };
+};
+
+window.workedExamples["agent-workflows"].experiment = {
+  label: "拖动回放恢复阶段 · 外部写入已成功，响应在中断中丢失",
+  min: 0, max: 4, initial: 0, unit: "阶段",
+  compare(stage) {
+    return [
+      ["外部文件数", 1, "同一业务键 export-42 对应一个已创建文件"],
+      ["本地已验收记录数", stage === 4 ? 1 : 0, "只有最后一步验证文件内容后才计为完成"]
+    ];
+  },
+  diagram(stage) {
+    const labels = ["检查点", "中断", "恢复查状态", "复用已有文件", "验证并提交"];
+    const details = ["128 条订单快照与 export-42 已保存", "写成功，响应丢失，本地结果未知", "用原业务键查询外部导出服务", "查到已有文件，绑定其引用", "核对 128 个唯一订单 ID 并保存成功"];
+    return {
+      items: labels.map((label, index) => ({
+        label: (index + 1) + " · " + label,
+        detail: index <= stage ? details[index] : "尚未执行",
+        state: index === stage ? "accepted" : index < stage ? "occupied" : "vacant"
+      })),
+      explanation: [
+        "预设教学故障为外部文件已经创建，但本地尚未记录响应。检查点中的业务键能用于恢复后查证，它本身还无法证明文件完成。",
+        "进程中断后，外部文件仍存在。本地状态是未知，因此仅重放创建请求可能重复写入，具体取决于服务的幂等协议。",
+        "恢复后先查 export-42。读取外部结果把未知状态转换为可观察状态，找到文件引用后再继续。",
+        "复用已经找到的文件，并检查它对应的业务键和快照。当前只确认存在，接下来核验实际内容。",
+        "核对文件可解析、列集合正确以及 128 个唯一订单 ID 完整后，保存本地成功记录。这个演示假设这些内容检查全部通过。"
+      ][stage]
+    };
+  }
+};
+
+window.workedExamples["rsi-paired-eval"].experiment.diagram = function (gains) {
+  return {
+    items: Array.from({ length: 20 }, (_, index) => {
+      const common = index < 8;
+      const regression = index === 8;
+      const improved = index >= 9 && index < 9 + gains;
+      return {
+        label: "任务 " + (index + 1),
+        detail: common ? "旧 ✓ → 新 ✓" : regression ? "旧 ✓ → 新 ×" : improved ? "旧 × → 新 ✓" : "旧 × → 新 ×",
+        state: common ? "occupied" : regression ? "excluded" : improved ? "accepted" : "vacant"
+      };
+    }),
+    explanation: "每格代表同一道任务的新旧配对结果。共同成功固定为 8，回归固定为 1，新增成功为 " + gains +
+      "，共同失败为 " + (11 - gains) + "。基线 9/20=45%，新版 " + (8 + gains) +
+      "/20=" + ((8 + gains) * 5) + "%，净变化 (" + gains + "−1)/20=" + ((gains - 1) * 5) +
+      " 个百分点。新增收益再大，任务 9 的回归仍需单独排查。这些数量都是教学设定。"
+  };
+};
