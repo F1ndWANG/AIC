@@ -370,3 +370,9 @@ a { color: var(--cyan); text-underline-offset: 3px; }
 @keyframes experiment-arrival { from { opacity: .3; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes experiment-fill { from { width: 0; } to { width: var(--amount); } }
 @media (max-width: 500px) { .experiment-diagram { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .experiment-item { transition: background-color .45s, border-color .45s, opacity .45s; }
+  .experiment-item.probability::after { animation: none; transition: width .6s ease; }
+  .example-meter span { transition: width .6s ease; }
+}
