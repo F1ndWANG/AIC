@@ -741,3 +741,72 @@ window.workedExamples["speculative-sampling"].experiment.diagram = function (dra
       "最终总分布始终是目标的 [0.6,0.4]；图中展示的是多次采样的路径概率。"
   };
 };
+
+window.workedExamples["grpo-objective"].experiment = {
+  label: "改变新旧策略概率比 r × 10 · 优势 A=−1，ε=0.2",
+  min: 2, max: 18, initial: 5, unit: "",
+  compare(value) {
+    const ratio = value / 10;
+    const clipped = Math.max(0.8, Math.min(1.2, ratio));
+    return [
+      ["未裁剪分支 rA", -ratio, "条长显示绝对值，数值保留负号"],
+      ["裁剪分支 clip(r)A", -clipped, "clip(r) 被限制在 [0.8,1.2]"],
+      ["代理目标 min", Math.min(-ratio, -clipped), "两个分支分别乘负优势，再取较小值"]
+    ];
+  },
+  diagram(value) {
+    const ratio = value / 10;
+    const clipped = Math.max(0.8, Math.min(1.2, ratio));
+    return {
+      items: [
+        { label: "新旧概率比", detail: "r=" + ratio.toFixed(1), state: "occupied" },
+        { label: "裁剪后比值", detail: clipped.toFixed(1), state: "occupied" },
+        { label: "负优势 A", detail: "−1", state: "excluded" },
+        { label: "最终代理目标", detail: Math.min(-ratio, -clipped).toFixed(1), state: "accepted" }
+      ],
+      explanation: "当前 r=" + ratio.toFixed(1) + "，两条分支分别为 " + (-ratio).toFixed(1) +
+        " 与 " + (-clipped).toFixed(1) + "，取较小者 " + Math.min(-ratio, -clipped).toFixed(1) +
+        "。r<0.8 时降低坏动作概率的额外奖励被裁住；r>1.2 时该坏动作概率升高，未裁剪分支仍继续惩罚。此处只计算一个 Token 的代理项，尚未计 KL 和归约。"
+    };
+  }
+};
+
+window.workedExamples["rrf-ranking"].experiment = {
+  label: "改变融合常数 k · 词法 [A,B]，向量 [C,B]",
+  precision: 5,
+  min: 1, max: 60, initial: 10, unit: "",
+  compare(k) {
+    return [
+      ["A 的 RRF 分", 1 / (k + 1), "仅在词法路第 1"],
+      ["B 的 RRF 分", 2 / (k + 2), "两路均为第 2"],
+      ["C 的 RRF 分", 1 / (k + 1), "仅在向量路第 1"]
+    ];
+  },
+  diagram(k) {
+    return {
+      items: [
+        { label: "词法一路", detail: "A 第 1 → 1/" + (k + 1), state: "occupied" },
+        { label: "向量一路", detail: "C 第 1 → 1/" + (k + 1), state: "occupied" },
+        { label: "两路共同候选 B", detail: "1/" + (k + 2) + " + 1/" + (k + 2) + " = " + (2 / (k + 2)).toFixed(5), state: "accepted" },
+        { label: "融合顺序", detail: "B > A = C", state: "occupied" }
+      ],
+      explanation: "每路贡献为 1/(k+rank)，按文档 ID 相加。当前 B=" + (2 / (k + 2)).toFixed(5) +
+        "，A=C=" + (1 / (k + 1)).toFixed(5) + "。本例 k≥1 时 B 始终领先。k 增大时，同一路第 1 与第 2 的贡献比 (k+2)/(k+1) 更接近 1。这里 k 是融合常数，召回列表保持不变。"
+    };
+  }
+};
+
+window.workedExamples["serving-calculations"].experiment.diagram = function (requests) {
+  const usage = requests * 0.5;
+  return {
+    items: Array.from({ length: 24 }, (_, index) => ({
+      label: "请求 " + (index + 1),
+      detail: index >= requests ? "未分配" : index < 16 ? "0.5 GiB KV" : "超出 KV 预算",
+      state: index >= requests ? "vacant" : index < 16 ? "occupied" : "excluded"
+    })),
+    explanation: "每请求 4096 Token，每 Token 128 KiB，共 0.5 GiB。当前 " + requests +
+      " 个请求需要 " + usage + " GiB；教学设定的可用 KV 预算为 8 GiB。" +
+      (usage <= 8 ? "按裸载荷估算尚未超预算。" : "超出 " + (usage - 8) + " GiB，红框表示无法由当前预算承载的请求。") +
+      "预算已假设扣除权重与工作区，实际部署还要核对分页碎片、共享、调度和输出增长。"
+  };
+};
