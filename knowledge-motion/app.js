@@ -21,6 +21,7 @@ let finished = false;
 let remaining = 0;
 let startedAt = 0;
 let playbackRate = Number(speed.value);
+let stopExperimentPlayback;
 
 function element(tag, className, content) {
   const node = document.createElement(tag);
@@ -305,6 +306,16 @@ function renderExampleExperiment(experiment) {
   output.setAttribute("aria-live", "polite");
   const diagram = element("div", "experiment-diagram");
   const explanation = element("p", "example-reason");
+  const sweep = element("button", "", "自动扫参");
+  sweep.type = "button";
+  let sweepTimer;
+  function stopSweep() {
+    clearTimeout(sweepTimer);
+    sweepTimer = undefined;
+    sweep.textContent = "自动扫参";
+    sweep.setAttribute("aria-pressed", "false");
+  }
+  stopExperimentPlayback = stopSweep;
   function update() {
     const input = Number(slider.value);
     value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
@@ -332,7 +343,10 @@ function renderExampleExperiment(experiment) {
       explanation.textContent = state.explanation;
     }
   }
-  slider.addEventListener("input", update);
+  slider.addEventListener("input", () => {
+    stopSweep();
+    update();
+  });
   panel.append(label, output);
   if (experiment.diagram) panel.append(diagram, explanation);
   const controls = element("div", "example-controls");
@@ -340,6 +354,7 @@ function renderExampleExperiment(experiment) {
     const button = element("button", "", caption);
     button.type = "button";
     button.addEventListener("click", () => {
+      stopSweep();
       const increment = Number(experiment.step ?? 1);
       slider.value = direction
         ? Math.max(experiment.min, Math.min(experiment.max, Number(slider.value) + direction * increment))
@@ -348,12 +363,38 @@ function renderExampleExperiment(experiment) {
     });
     controls.append(button);
   }
+  function advanceSweep() {
+    const value = Number(slider.value);
+    if (value >= experiment.max) {
+      stopSweep();
+      return;
+    }
+    slider.value = Math.min(experiment.max, value + Number(experiment.step ?? 1));
+    update();
+    sweepTimer = setTimeout(advanceSweep, 1800);
+  }
+  sweep.setAttribute("aria-pressed", "false");
+  sweep.addEventListener("click", () => {
+    if (sweepTimer !== undefined) {
+      stopSweep();
+      return;
+    }
+    stopPlayback();
+    slider.value = experiment.min;
+    update();
+    sweep.textContent = "暂停扫参";
+    sweep.setAttribute("aria-pressed", "true");
+    sweepTimer = setTimeout(advanceSweep, 1800);
+  });
+  controls.append(sweep);
   panel.append(controls);
   update();
   return panel;
 }
 
 function renderWorkedExample(example) {
+  stopExperimentPlayback?.();
+  stopExperimentPlayback = undefined;
   const panel = document.querySelector("#worked-example");
   panel.replaceChildren();
   panel.hidden = !example;
