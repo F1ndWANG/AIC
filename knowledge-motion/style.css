@@ -376,3 +376,11 @@ a { color: var(--cyan); text-underline-offset: 3px; }
   .experiment-item.probability::after { animation: none; transition: width .6s ease; }
   .example-meter span { transition: width .6s ease; }
 }
+
+.experiment-history { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px; scroll-snap-type: x proximity; }
+.experiment-snapshot { flex: 0 0 165px; display: flex; flex-direction: column; gap: 5px; text-align: left; scroll-snap-align: start; line-height: 1.5; }
+.experiment-snapshot span { font-size: .75rem; color: var(--muted); }
+.experiment-snapshot[aria-pressed="true"] { border-color: var(--accent); background: #18344a; }
+@media (prefers-reduced-motion: no-preference) {
+  .experiment-snapshot { animation: experiment-arrival .3s ease-out; }
+}
