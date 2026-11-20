@@ -896,3 +896,82 @@ window.workedExamples["context-engineering"].experiment = {
     };
   }
 };
+
+window.workedExamples["transformer-architecture"].experiment.matrices = function (futureValue) {
+  // Q=[(1,0),(0,1),(1,1)], K=[(sqrt(2),0),(0,0),(0,4sqrt(2))].
+  const scores = [[1, 0, 0], [0, 0, 4], [1, 0, 4]];
+  return [true, false].map(causal => ({
+    title: causal ? "因果注意力权重 · 每行和为 1" : "关闭掩码的对照 · 每行和为 1",
+    corner: "查询 / 键",
+    columns: ["K₁ · V=2", "K₂ · V=8", "K₃ · V=" + futureValue],
+    rows: scores.map((row, i) => {
+      const weights = row.map((score, j) => causal && j > i ? 0 : Math.exp(score));
+      const total = weights.reduce((sum, number) => sum + number, 0);
+      const output = weights.reduce((sum, number, j) => sum + number / total * [2, 8, futureValue][j], 0);
+      return {
+        label: "Q" + (i + 1),
+        cells: weights.map((number, j) => ({
+          text: (number / total).toFixed(3),
+          weight: number / total,
+          detail: causal && j > i
+            ? "查询位置 " + (i + 1) + " 看不到未来键位置 " + (j + 1) + "。该 logit 在 softmax 前被设为负无穷，因此权重为 0。"
+            : "该格的缩放点积分数为 " + row[j] + "，指数值为 " + Math.exp(row[j]).toFixed(3) +
+              "，除以本行允许项指数和 " + total.toFixed(3) + "，得到 " + (number / total).toFixed(3) +
+              "。本行把 V=[2,8," + futureValue + "] 加权求和，输出 " + output.toFixed(3) + "。"
+        }))
+      };
+    })
+  }));
+};
+
+window.workedExamples["sft-peft"].experiment.matrices = function (rank) {
+  // Synthetic A and selector B make every multiplication directly inspectable.
+  const A = Array.from({ length: rank }, (_, k) => Array.from({ length: 8 }, (_, j) => k === j ? 1 : 0.125));
+  const B = Array.from({ length: 8 }, (_, i) => Array.from({ length: rank }, (_, k) => Number(i === k)));
+  return [
+    {
+      title: "教学 A · " + rank + "×8",
+      corner: "秩 / 输入",
+      columns: Array.from({ length: 8 }, (_, j) => "x" + (j + 1)),
+      rows: A.map((row, k) => ({
+        label: "r" + (k + 1),
+        cells: row.map((number, j) => ({
+          text: number.toFixed(3), weight: number,
+          detail: "为手算指定 A[" + (k + 1) + "," + (j + 1) + "]=" + number +
+            "。本例对角项取 1，其余项取 0.125，便于逐项检查乘积。实际适配器由训练更新。"
+        }))
+      }))
+    },
+    {
+      title: "教学 B · 8×" + rank,
+      corner: "输出 / 秩",
+      columns: Array.from({ length: rank }, (_, k) => "r" + (k + 1)),
+      rows: B.map((row, i) => ({
+        label: "y" + (i + 1),
+        cells: row.map((number, k) => ({
+          text: String(number), weight: number,
+          detail: "本例 B[" + (i + 1) + "," + (k + 1) + "]=" + number +
+            "。B 被设为选择矩阵，使 BA 的前 r 行取自 A，其余行全为零。"
+        }))
+      }))
+    },
+    {
+      title: "ΔW=BA · 8×8 · 未乘 LoRA 缩放系数",
+      corner: "输出 / 输入",
+      columns: Array.from({ length: 8 }, (_, j) => "x" + (j + 1)),
+      rows: B.map((row, i) => ({
+        label: "y" + (i + 1),
+        cells: Array.from({ length: 8 }, (_, j) => {
+          const result = row.reduce((sum, number, k) => sum + number * A[k][j], 0);
+          return {
+            text: result.toFixed(3), weight: result,
+            detail: "ΔW[" + (i + 1) + "," + (j + 1) + "]=Σₖ B[" + (i + 1) +
+              ",k]A[k," + (j + 1) + "]=" + result + "。共累加 " + rank +
+              " 项。乘积始终是 8×8，秩上界为 r=" + rank +
+              "。本教学矩阵的 r 行线性独立，B 的 r 列也线性独立，乘积在本例中达到秩 r。"
+          };
+        })
+      }))
+    }
+  ];
+};
