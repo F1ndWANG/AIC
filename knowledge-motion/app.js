@@ -306,6 +306,11 @@ function renderExampleExperiment(experiment) {
   output.setAttribute("aria-live", "polite");
   const diagram = element("div", "experiment-diagram");
   const explanation = element("p", "example-reason");
+  const matrixPanel = element("div", "experiment-matrices");
+  const cellExplanation = element("p", "matrix-explanation", "点击任意矩阵格，查看它的计算依据。");
+  cellExplanation.setAttribute("role", "status");
+  const matrixViews = [];
+  let selectedCell;
   const sweep = element("button", "", "自动扫参");
   const history = element("div", "experiment-history");
   history.setAttribute("role", "group");
@@ -362,6 +367,75 @@ function renderExampleExperiment(experiment) {
       });
       explanation.textContent = state.explanation;
     }
+    if (experiment.matrices) {
+      const matrices = experiment.matrices(input);
+      cellExplanation.textContent = "点击任意矩阵格，查看它的计算依据。";
+      matrices.forEach((matrix, matrixIndex) => {
+        let view = matrixViews[matrixIndex];
+        const shape = matrix.rows.length + "×" + matrix.columns.length;
+        if (!view || view.shape !== shape) {
+          const section = element("section", "matrix-section");
+          const table = element("table", "calculation-matrix");
+          const caption = element("caption", "", matrix.title);
+          const head = element("thead");
+          const header = element("tr");
+          const corner = element("th", "", matrix.corner ?? "");
+          corner.setAttribute("scope", "col");
+          header.append(corner);
+          for (const column of matrix.columns) {
+            const th = element("th", "", column);
+            th.setAttribute("scope", "col");
+            header.append(th);
+          }
+          head.append(header);
+          const body = element("tbody");
+          const buttons = matrix.rows.map((row, rowIndex) => {
+            const line = element("tr");
+            const label = element("th", "", row.label);
+            label.setAttribute("scope", "row");
+            line.append(label);
+            const cells = row.cells.map((_, columnIndex) => {
+              const td = element("td");
+              const button = element("button", "matrix-cell");
+              button.type = "button";
+              button.addEventListener("click", () => {
+                stopSweep();
+                selectedCell = { matrixIndex, rowIndex, columnIndex };
+                update(false);
+              });
+              td.append(button);
+              line.append(td);
+              return button;
+            });
+            body.append(line);
+            return cells;
+          });
+          table.append(caption, head, body);
+          section.append(table);
+          view = { shape, section, caption, header, buttons };
+          matrixViews[matrixIndex] = view;
+        }
+        view.caption.textContent = matrix.title;
+        matrix.columns.forEach((column, index) => {
+          view.header.children[index + 1].textContent = column;
+        });
+        matrix.rows.forEach((row, rowIndex) => row.cells.forEach((cell, columnIndex) => {
+          const button = view.buttons[rowIndex][columnIndex];
+          button.textContent = cell.text;
+          button.title = cell.detail;
+          button.setAttribute("aria-label", row.label + "，" + matrix.columns[columnIndex] + "，" + cell.text);
+          const active = selectedCell?.matrixIndex === matrixIndex &&
+            selectedCell.rowIndex === rowIndex && selectedCell.columnIndex === columnIndex;
+          button.setAttribute("aria-pressed", String(active));
+          button.style.setProperty("--heat", Math.max(0, Math.min(1, cell.weight ?? 0)));
+          if (active) cellExplanation.textContent = cell.detail;
+        }));
+      });
+      const sections = matrixViews.map(view => view.section);
+      if (sections.some((section, index) => matrixPanel.children[index] !== section)) {
+        matrixPanel.replaceChildren(...sections);
+      }
+    }
     if (record && snapshots.at(-1)?.input !== input) {
       snapshots.push({ input, result: rows.map(([name, amount]) =>
         name + " " + Number(amount.toFixed(experiment.precision ?? 2))).join(" · ") });
@@ -387,6 +461,7 @@ function renderExampleExperiment(experiment) {
   });
   panel.append(label, output);
   if (experiment.diagram) panel.append(diagram, explanation);
+  if (experiment.matrices) panel.append(matrixPanel, cellExplanation);
   const controls = element("div", "example-controls");
   for (const [caption, direction] of [["减小参数", -1], ["增大参数", 1], ["重置", 0]]) {
     const button = element("button", "", caption);
