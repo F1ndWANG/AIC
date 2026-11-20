@@ -394,3 +394,12 @@ a { color: var(--cyan); text-underline-offset: 3px; }
 .matrix-cell[aria-pressed="true"] { outline: 2px solid var(--cyan); outline-offset: 1px; }
 .matrix-explanation { padding: 12px; margin-top: 10px; border-left: 3px solid var(--cyan); color: var(--muted); font-size: .88rem; line-height: 1.7; }
 @media (prefers-reduced-motion: no-preference) { .matrix-cell { transition: background-color .45s ease; } }
+
+.matrix-cell.matrix-dependency { box-shadow: inset 0 0 0 2px #f6ca7b; color: #fff0c5; }
+.matrix-trace { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 7px; margin-top: 10px; }
+.trace-term { text-align: left; font-size: .8rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.trace-term[aria-pressed="true"] { border-color: #f6ca7b; background: #393324; color: #fff0c5; }
+@media (prefers-reduced-motion: no-preference) {
+  .trace-term { animation: experiment-arrival .35s ease-out both; animation-delay: var(--arrival, 0ms); }
+  .matrix-cell { transition: background-color .45s, box-shadow .3s, color .3s; }
+}
