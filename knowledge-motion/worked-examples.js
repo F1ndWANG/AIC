@@ -913,11 +913,16 @@ window.workedExamples["transformer-architecture"].experiment.matrices = function
         cells: weights.map((number, j) => ({
           text: (number / total).toFixed(3),
           weight: number / total,
+          trace: weights.map((term, k) => ({
+            text: "输出第 " + (k + 1) + " 项 · " + (term / total).toFixed(4) +
+              " × " + [2, 8, futureValue][k] + " = " + (term / total * [2, 8, futureValue][k]).toFixed(4),
+            references: [{ matrix: causal ? 0 : 1, row: i, column: k }]
+          })),
           detail: causal && j > i
             ? "查询位置 " + (i + 1) + " 看不到未来键位置 " + (j + 1) + "。该 logit 在 softmax 前被设为负无穷，因此权重为 0。"
-            : "该格的缩放点积分数为 " + row[j] + "，指数值为 " + Math.exp(row[j]).toFixed(3) +
+            : "本例键维度 dₖ=2，Q=[(1,0),(0,1),(1,1)]，K=[(√2,0),(0,0),(0,4√2)]。该格 Qᵢ·Kⱼ/√2 的分数为 " + row[j] + "，指数值为 " + Math.exp(row[j]).toFixed(3) +
               "，除以本行允许项指数和 " + total.toFixed(3) + "，得到 " + (number / total).toFixed(3) +
-              "。本行把 V=[2,8," + futureValue + "] 加权求和，输出 " + output.toFixed(3) + "。"
+              "。本行把 V=[2,8," + futureValue + "] 加权求和，输出 " + output.toFixed(3) + "。点击下方分项可高亮对应权重。显示值经过舍入，计算使用未舍入权重。"
         }))
       };
     })
@@ -965,9 +970,19 @@ window.workedExamples["sft-peft"].experiment.matrices = function (rank) {
           const result = row.reduce((sum, number, k) => sum + number * A[k][j], 0);
           return {
             text: result.toFixed(3), weight: result,
+            trace: row.map((number, k) => ({
+              text: "k=" + (k + 1) + " · B[" + (i + 1) + "," + (k + 1) +
+                "] × A[" + (k + 1) + "," + (j + 1) + "] = " + number +
+                " × " + A[k][j] + " = " + (number * A[k][j]),
+              references: [
+                { matrix: 1, row: i, column: k },
+                { matrix: 0, row: k, column: j },
+                { matrix: 2, row: i, column: j }
+              ]
+            })),
             detail: "ΔW[" + (i + 1) + "," + (j + 1) + "]=Σₖ B[" + (i + 1) +
               ",k]A[k," + (j + 1) + "]=" + result + "。共累加 " + rank +
-              " 项。乘积始终是 8×8，秩上界为 r=" + rank +
+              " 项。点击下方任一项，可同时高亮 B 的行元素、A 的列元素与输出格。零乘积也参与求和。乘积始终是 8×8，秩上界为 r=" + rank +
               "。本教学矩阵的 r 行线性独立，B 的 r 列也线性独立，乘积在本例中达到秩 r。"
           };
         })
