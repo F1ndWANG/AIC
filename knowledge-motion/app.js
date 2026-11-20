@@ -311,6 +311,10 @@ function renderExampleExperiment(experiment) {
   cellExplanation.setAttribute("role", "status");
   const matrixViews = [];
   let selectedCell;
+  let activeTerm = 0;
+  const tracePanel = element("div", "matrix-trace");
+  tracePanel.setAttribute("role", "group");
+  tracePanel.setAttribute("aria-label", "分项计算，点击高亮参与计算的矩阵格");
   const sweep = element("button", "", "自动扫参");
   const history = element("div", "experiment-history");
   history.setAttribute("role", "group");
@@ -369,6 +373,10 @@ function renderExampleExperiment(experiment) {
     }
     if (experiment.matrices) {
       const matrices = experiment.matrices(input);
+      const selected = matrices[selectedCell?.matrixIndex]?.rows[selectedCell?.rowIndex]?.cells[selectedCell?.columnIndex];
+      const trace = selected?.trace ?? [];
+      activeTerm = Math.min(activeTerm, Math.max(0, trace.length - 1));
+      const references = trace[activeTerm]?.references ?? [];
       cellExplanation.textContent = "点击任意矩阵格，查看它的计算依据。";
       matrices.forEach((matrix, matrixIndex) => {
         let view = matrixViews[matrixIndex];
@@ -401,6 +409,7 @@ function renderExampleExperiment(experiment) {
               button.addEventListener("click", () => {
                 stopSweep();
                 selectedCell = { matrixIndex, rowIndex, columnIndex };
+                activeTerm = 0;
                 update(false);
               });
               td.append(button);
@@ -427,6 +436,8 @@ function renderExampleExperiment(experiment) {
           const active = selectedCell?.matrixIndex === matrixIndex &&
             selectedCell.rowIndex === rowIndex && selectedCell.columnIndex === columnIndex;
           button.setAttribute("aria-pressed", String(active));
+          button.classList.toggle("matrix-dependency", references.some(reference =>
+            reference.matrix === matrixIndex && reference.row === rowIndex && reference.column === columnIndex));
           button.style.setProperty("--heat", Math.max(0, Math.min(1, cell.weight ?? 0)));
           if (active) cellExplanation.textContent = cell.detail;
         }));
@@ -435,6 +446,17 @@ function renderExampleExperiment(experiment) {
       if (sections.some((section, index) => matrixPanel.children[index] !== section)) {
         matrixPanel.replaceChildren(...sections);
       }
+      tracePanel.replaceChildren(...trace.map((term, index) => {
+        const button = element("button", "trace-term", term.text);
+        button.type = "button";
+        button.setAttribute("aria-pressed", String(index === activeTerm));
+        button.style.setProperty("--arrival", (index * 60) + "ms");
+        button.addEventListener("click", () => {
+          activeTerm = index;
+          update(false);
+        });
+        return button;
+      }));
     }
     if (record && snapshots.at(-1)?.input !== input) {
       snapshots.push({ input, result: rows.map(([name, amount]) =>
@@ -461,7 +483,7 @@ function renderExampleExperiment(experiment) {
   });
   panel.append(label, output);
   if (experiment.diagram) panel.append(diagram, explanation);
-  if (experiment.matrices) panel.append(matrixPanel, cellExplanation);
+  if (experiment.matrices) panel.append(matrixPanel, cellExplanation, tracePanel);
   const controls = element("div", "example-controls");
   for (const [caption, direction] of [["减小参数", -1], ["增大参数", 1], ["重置", 0]]) {
     const button = element("button", "", caption);
