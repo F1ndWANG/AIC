@@ -58,7 +58,7 @@
         <label>知识主题 <select id="topics"></select></label>
         <div class="actions">
           <button id="play" type="button">播放动效</button>
-          <button id="overview" type="button">总览</button>
+          <button id="overview" type="button">查看全部知识点</button>
           <button id="print" type="button">打印 / PDF</button>
         </div>
       </div>
@@ -85,8 +85,11 @@
       </div>
       <p id="status" class="sr-only" role="status"></p>
     </header>
-    <section id="worked-example" aria-labelledby="example-title" hidden></section>
     <section id="cards" aria-label="知识卡片"></section>
+    <details id="case-disclosure" class="case-disclosure">
+      <summary>本章算例与交互实验</summary>
+      <section id="worked-example" aria-labelledby="example-title" hidden></section>
+    </details>
     <footer>
       <p id="note"></p>
       <ul id="sources" aria-label="参考资料"></ul>
