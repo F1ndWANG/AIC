@@ -36,3 +36,22 @@ python3 -m closedloop test-report RUN_ID
 - `python3 -m closedloop work --limit 100` 可作为定时任务的单次处理入口。任务租约仍由元数据仓库管理。
 
 在独立数据库和空对象前缀上运行 `python3 -m closedloop demo`，然后运行 `status` 和 `lineage request-0`，可覆盖版本发布、训练门禁、预测反馈和回滚。当前环境没有 PostgreSQL 服务，尚未执行真实后端联合验收。
+
+## 内部 API 与持续 Worker
+
+在共享元数据及对象配置下分别运行 `python3 -m closedloop.service` 和
+`python3 -m closedloop.worker --batch 100 --poll 2`。API 自带的开发服务器监听环回地址；
+跨机器部署使用 WSGI 容器加载 `create_app`，并由内部网关提供 TLS 和限流。
+每个启用的角色使用独立随机令牌，最少 32 字节。
+
+| 路径 | 令牌环境变量 | 请求参数 |
+| --- | --- | --- |
+| POST /v1/events | CLOSEDLOOP_TOKEN_WRITER | 与 JSONL 接入事件相同 |
+| POST /v1/predictions | CLOSEDLOOP_TOKEN_INFERENCE | sample_id、request_id |
+| POST /v1/feedback | CLOSEDLOOP_TOKEN_FEEDBACK | feedback_id、prediction_id、label、source、available_at |
+| GET /v1/queue | CLOSEDLOOP_TOKEN_OPERATOR | 返回待执行、过期租约、隔离任务数 |
+| GET /v1/status | CLOSEDLOOP_TOKEN_OPERATOR | 返回实体数量和活动模型 |
+
+请求使用 `Authorization: Bearer <token>`，POST 使用 JSON。
+`/healthz` 仅表示进程存活。Worker 支持正常退出以及异常退避，过期租约可由后续 Worker 回收。
+可由外部监控系统轮询队列指标设置告警。标注操作仍使用现有 CLI。
