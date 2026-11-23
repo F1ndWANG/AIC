@@ -476,3 +476,37 @@ footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--edge);
   .experiment-item.accepted { box-shadow: inset 0 3px 0 var(--accent); }
   .experiment-item.vacant { transition: opacity .3s ease, background-color .3s ease; }
 }
+
+/* Default to one readable lesson, with the chapter laboratory available on demand. */
+main { max-width: 1000px; padding-top: 24px; }
+header { padding-bottom: 12px; }
+.toolbar { margin-bottom: 22px; padding-bottom: 16px; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); }
+h1::after { margin: 14px 0; }
+#subtitle { font-size: .95rem; line-height: 1.75; }
+#steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 18px; }
+.step { padding: 9px 11px; font-size: .83rem; }
+#cards.reading-view { display: block; max-width: 780px; margin-inline: auto; }
+.card[hidden] { display: none; }
+.reading-view .card { padding: clamp(18px, 4vw, 30px); box-shadow: none; }
+.reading-view .card.highlighted { animation: none; border-color: var(--edge); box-shadow: none; }
+.reading-view .card h2 { font-size: 1.3rem; }
+.reading-view .visual { padding-top: 16px; margin-top: 16px; }
+.reading-view .description { margin-top: 12px; }
+.case-disclosure { margin: 24px auto 0; max-width: 900px; border: 1px solid var(--edge); border-radius: 12px; background: #122131; }
+.case-disclosure > summary { padding: 16px 20px; cursor: pointer; color: var(--cyan); font-size: .92rem; line-height: 1.6; }
+.case-disclosure[open] > summary { border-bottom: 1px solid var(--edge); }
+.case-disclosure #worked-example { border: 0; border-radius: 0 0 12px 12px; margin: 0; box-shadow: none; }
+.case-disclosure[hidden] { display: none; }
+.transport { padding: 12px 0 0; margin-bottom: 10px; }
+@media (max-width: 620px) {
+  #steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .actions { width: 100%; }
+  .actions button { flex: 1 1 auto; font-size: .8rem; }
+  .case-disclosure > summary { padding: 14px 16px; }
+}
+@media print {
+  .card[hidden] { display: flex !important; }
+  #cards.reading-view { display: grid; max-width: none; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .case-disclosure { display: none; }
+}
