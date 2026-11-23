@@ -1127,3 +1127,150 @@ window.workedExamples["rrf-ranking"].experiment.matrices = function (k) {
     }))
   }];
 };
+
+window.workedExamples["pretraining-inference"].experiment = {
+  label: "生成步数 · 一次前向只选择一个新 Token",
+  min: 0, max: 3, initial: 0, unit: "步",
+  compare(step) {
+    return [
+      ["可见序列 Token 数", 1 + step, "含 1 个提示 Token 与已选出的生成 Token"],
+      ["已完成前向次数", Math.min(step + 1, 3), "预填充 1 次，最多再解码 2 次"],
+      ["KV 已缓存位置数", Math.min(step + 1, 3), "选出 EOS 后立即停止，无需再对 EOS 前向"]
+    ];
+  },
+  diagram(step) {
+    const tokens = ["一只", "猫", "坐下", "EOS"];
+    return {
+      items: tokens.map((token,index) => ({
+        label: token,
+        detail: index === 0 ? "提示 ID 10" : index <= step ? "已选出 · ID " + [10,21,32,2][index] : "尚未选出",
+        state: index === 0 ? "occupied" : index > step ? "vacant" : index === 3 ? "excluded" : "accepted"
+      })),
+      explanation: [
+        "把教学提示 Token「一只」预填充，得到下一项分布「猫 0.7 / 狗 0.3」。贪心选最大项。词与 ID 都是简化设定，真实分词边界应以模型 tokenizer 为准。",
+        "已经选出「猫」，将它接在提示后。对新增的「猫」前向并追加 K/V，取得下一项分布「坐下 0.8 / 奔跑 0.2」。前一分布已完成使命，下一步要使用新前缀对应的新分布。",
+        "已经选出「坐下」，再对这个新增位置前向，得到下一项分布「EOS 0.9 / 看 0.1」。此刻模型已经处理 3 个前缀位置，缓存中也有这 3 个位置。",
+        "选出 EOS 后结束。可见序列共 4 个 Token，模型实际只前向处理前三个位置；无需把 EOS 再送进模型。缓存减少历史 K/V 重算，当前查询仍会访问可见历史。"
+      ][step]
+    };
+  },
+  matrices(step) {
+    const rows = [
+      {prefix:"一只", choices:["猫","狗"], probabilities:[.7,.3]},
+      {prefix:"一只 猫", choices:["坐下","奔跑"], probabilities:[.8,.2]},
+      {prefix:"一只 猫 坐下", choices:["EOS","看"], probabilities:[.9,.1]}
+    ];
+    return [{
+      title: "各前缀的下一 Token 分布 · 预设教学模型",
+      corner: "前缀",
+      columns: ["候选 1", "候选 2", "贪心选择"],
+      rows: rows.map((row,index) => ({
+        label: row.prefix,
+        cells: [
+          ...row.probabilities.map((probability,j) => ({
+            text: index > step ? "待计算" : row.choices[j]+" "+probability,
+            weight: index > step ? 0 : probability,
+            detail: "只在此前缀下使用本行分布，预设两项概率合计为 1。选出的 Token 改变前缀后，应重新计算下一位置分布。"
+          })),
+          {
+            text: index > step ? "待计算" : row.choices[0],
+            weight: index > step ? 0 : 1,
+            detail: index > step ? "该前缀尚未到达，模型不会预先沿未选分支计算这一分布。" : "本行最大概率为 "+row.probabilities[0]+"，因此选 "+row.choices[0]+"。这是贪心解码的规则，未进行随机采样。",
+            trace: [{text:"argmax("+row.probabilities.join(", ")+") → "+row.choices[0],references:[{matrix:0,row:index,column:0},{matrix:0,row:index,column:1},{matrix:0,row:index,column:2}]}]
+          }
+        ]
+      }))
+    }];
+  }
+};
+
+window.workedExamples["scaling-training"].experiment = {
+  label: "改变 MoE 每 Token 激活专家数 k · 共 4 个专家",
+  min: 1, max: 4, initial: 2, unit: "个",
+  routing(k) {
+    const logits=[2,1,0,-1];
+    const denominator=logits.reduce((sum,number)=>sum+Math.exp(number),0);
+    const raw=logits.map(number=>Math.exp(number)/denominator);
+    const mass=raw.slice(0,k).reduce((sum,number)=>sum+number,0);
+    return raw.map((probability,index)=>({probability,weight:index<k?probability/mass:0,result:[2,4,8,16][index]}));
+  },
+  compare(k) {
+    return [
+      ["已存储专家数",4,"所有专家都需要存储"],
+      ["本 Token 激活数",k,"按路由分数选前 k 个"],
+      ["加权输出",this.routing(k).reduce((sum,row)=>sum+row.weight*row.result,0),"本例截断后重新归一化路由权重"]
+    ];
+  },
+  diagram(k) {
+    const route=this.routing(k);
+    return {
+      items:route.map((row,index)=>({
+        label:"专家 E"+(index+1),
+        detail:index<k?"权重 "+row.weight.toFixed(3)+" · 输出 "+row.result:"本 Token 未调用",
+        percent:row.weight*100,
+        state:index<k?"probability":"vacant"
+      })),
+      explanation:"路由 logits 固定为 [2,1,0,−1]，先 softmax，再选前 "+k+
+        " 个专家，并将入选权重重新归一化。本例各专家输出标量 [2,4,8,16]，加权和为 "+
+        route.reduce((sum,row)=>sum+row.weight*row.result,0).toFixed(4)+
+        "。增加 k 会调用更多专家，但存储的专家总数始终为 4。实际 MoE 的路由归一化、容量限制、负载均衡和通信策略需按模型实现核对；本例仅演示稀疏选择与加权。"
+    };
+  },
+  matrices(k) {
+    const route=this.routing(k);
+    return [{
+      title:"路由分数 → 稀疏权重 → 专家结果 → 汇总",
+      corner:"专家",columns:["原路由概率","入选权重","专家输出","贡献"],
+      rows:route.map((row,index)=>({
+        label:"E"+(index+1),
+        cells:[
+          {text:row.probability.toFixed(4),weight:row.probability,detail:"本专家 logit="+[2,1,0,-1][index]+"，softmax 在全部 4 个专家上归一化。"},
+          {text:row.weight.toFixed(4),weight:row.weight,detail:index<k?"进入 top-k 集合，原概率除以入选概率总和。":"未入选，最终权重为 0，本 Token 不执行这个专家。"},
+          {text:index<k?String(row.result):"未执行",detail:"教学预设该专家在同一输入上的标量输出为 "+row.result+"；未入选时不会计算它。"},
+          {text:(row.weight*row.result).toFixed(4),detail:"贡献=归一化权重×专家输出；未入选贡献为零。",trace:[{text:row.weight.toFixed(4)+" × "+row.result+" = "+(row.weight*row.result).toFixed(4),references:[{matrix:0,row:index,column:1},{matrix:0,row:index,column:2},{matrix:0,row:index,column:3}]}]}
+        ]
+      }))
+    }];
+  }
+};
+
+window.workedExamples["agent-verification"].experiment = {
+  label:"逐步加入独立测试 · 候选程序 f(x)=x，目标为绝对值",
+  min:1,max:4,initial:2,unit:"个用例",
+  compare(count) {
+    const inputs=[2,3,-2,0].slice(0,count);
+    return [
+      ["候选通过用例数",inputs.filter(input=>input===Math.abs(input)).length,"逐个对照独立的预期输出"],
+      ["当前用例总数",count,"测试按 [2,3,−2,0] 顺序加入"],
+      ["整组验收通过",inputs.every(input=>input===Math.abs(input))?1:0,"任何一个用例失败，整组判失败"]
+    ];
+  },
+  diagram(count) {
+    return {
+      items:[2,3,-2,0].map((input,index)=>({
+        label:"输入 "+input,
+        detail:index>=count?"尚未加入": "实际 "+input+" / 预期 "+Math.abs(input),
+        state:index>=count?"vacant":input===Math.abs(input)?"accepted":"excluded"
+      })),
+      explanation:count<3?
+        "目前只覆盖正数，f(x)=x 与绝对值在这些输入上完全一致，因此整组测试通过。把用例数增加到 3，加入负数 −2，检查判定会怎样变化。有限测试的通过表示在当前用例上满足规则，结论受测试覆盖限制。":
+        "独立反例 −2 的预期为 2，候选却返回 −2，整组验收失败。目标是检查程序实际行为，验证端依据预先定义的数学规则产生预期值。加入 0 可扩大边界覆盖，但无法抵消负数上的失败。"
+    };
+  },
+  matrices(count) {
+    return [{
+      title:"执行结果与独立预期逐项对账",
+      corner:"用例",columns:["输入","预期 |x|","实际 f(x)","判定"],
+      rows:[2,3,-2,0].map((input,index)=>({
+        label:String(index+1),
+        cells:[
+          {text:String(input),detail:"该输入来自固定测试清单；只改变当前已启用的用例数量。"},
+          {text:String(Math.abs(input)),detail:"按任务规格计算绝对值，负数应改变符号。"},
+          {text:index<count?String(input):"未执行",detail:"候选程序固定为 f(x)=x，直接返回原输入。"},
+          {text:index>=count?"待测":input===Math.abs(input)?"通过":"失败",detail:index>=count?"尚未把这个用例加入验收。":"实际 "+input+" 与预期 "+Math.abs(input)+(input===Math.abs(input)?" 相同。":" 不同。该反例可复现候选缺陷。"),
+           trace:[{text:index>=count?"待加入用例":input+" === "+Math.abs(input)+" → "+(input===Math.abs(input)),references:[{matrix:0,row:index,column:1},{matrix:0,row:index,column:2},{matrix:0,row:index,column:3}]}]}
+        ]
+      }))
+    }];
+  }
+};
