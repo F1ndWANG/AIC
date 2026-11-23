@@ -350,7 +350,8 @@ function renderExampleExperiment(experiment) {
       const tile = output.children[index];
       tile.children[0].textContent = name;
       tile.children[1].textContent = Number(amount.toFixed(experiment.precision ?? 2));
-      tile.children[2].children[0].style.width = `${100 * Math.abs(amount) / magnitude}%`;
+      tile.children[2].children[0].style.width = "100%";
+      tile.children[2].children[0].style.transform = `scaleX(${Math.abs(amount) / magnitude})`;
       tile.children[3].textContent = detail;
     });
     if (experiment.diagram) {
@@ -368,6 +369,7 @@ function renderExampleExperiment(experiment) {
         node.children[0].textContent = item.label;
         node.children[1].textContent = item.detail;
         node.style.setProperty("--amount", (item.percent ?? 0) + "%");
+        node.style.setProperty("--fraction", Math.max(0, Math.min(1, (item.percent ?? 0) / 100)));
       });
       explanation.textContent = state.explanation;
     }
