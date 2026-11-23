@@ -333,6 +333,7 @@ function renderExampleExperiment(experiment) {
     const input = Number(slider.value);
     value.textContent = [input, experiment.unit].filter(Boolean).join(" ");
     const rows = experiment.compare(input);
+    output.hidden = rows.length === 0;
     const magnitude = Math.max(1e-12, ...rows.map(([, amount]) => Math.abs(amount)));
     if (output.children.length !== rows.length) {
       output.replaceChildren(...rows.map(() => {
@@ -448,36 +449,47 @@ function renderExampleExperiment(experiment) {
       if (sections.some((section, index) => matrixPanel.children[index] !== section)) {
         matrixPanel.replaceChildren(...sections);
       }
-      tracePanel.replaceChildren(...trace.map((term, index) => {
-        const button = element("button", "trace-term", term.text);
-        button.type = "button";
+      if (tracePanel.children.length !== trace.length) {
+        tracePanel.replaceChildren(...trace.map((_, index) => {
+          const button = element("button", "trace-term");
+          button.type = "button";
+          button.addEventListener("click", () => {
+            activeTerm = index;
+            update(false);
+          });
+          return button;
+        }));
+      }
+      trace.forEach((term, index) => {
+        const button = tracePanel.children[index];
+        button.textContent = term.text;
         button.setAttribute("aria-pressed", String(index === activeTerm));
-        button.style.setProperty("--arrival", (index * 60) + "ms");
-        button.addEventListener("click", () => {
-          activeTerm = index;
-          update(false);
-        });
-        return button;
-      }));
+      });
     }
     if (record && snapshots.at(-1)?.input !== input) {
       snapshots.push({ input, result: rows.map(([name, amount]) =>
         name + " " + Number(amount.toFixed(experiment.precision ?? 2))).join(" · ") });
       if (snapshots.length > 6) snapshots.shift();
     }
-    history.replaceChildren(...snapshots.map(snapshot => {
-      const button = element("button", "experiment-snapshot");
-      button.type = "button";
-      button.append(element("strong", "", "参数 " + snapshot.input),
-        element("span", "", snapshot.result));
+    if (history.children.length !== snapshots.length) {
+      history.replaceChildren(...snapshots.map((_, index) => {
+        const button = element("button", "experiment-snapshot");
+        button.type = "button";
+        button.append(element("strong"), element("span"));
+        button.addEventListener("click", () => {
+          stopSweep();
+          slider.value = snapshots[index].input;
+          update(false);
+        });
+        return button;
+      }));
+    }
+    snapshots.forEach((snapshot, index) => {
+      const button = history.children[index];
+      button.children[0].textContent = "参数 " + snapshot.input;
+      button.children[1].textContent = snapshot.result || experiment.snapshot?.(snapshot.input) || experiment.diagram(snapshot.input).explanation;
       button.setAttribute("aria-pressed", String(snapshot.input === input));
-      button.addEventListener("click", () => {
-        stopSweep();
-        slider.value = snapshot.input;
-        update(false);
-      });
-      return button;
-    }));
+    });
   }
   slider.addEventListener("input", () => {
     stopSweep();
