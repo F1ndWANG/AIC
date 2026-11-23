@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from .core import Loop, LoopError
 from .demo import run
+from .video import ingest_video
 
 
 def main():
@@ -14,11 +15,28 @@ def main():
     for name in ("init", "work", "status", "demo", "rollback"):
         sub.add_parser(name)
     p = sub.add_parser("ingest"); p.add_argument("file", help="JSONL 事件文件")
+    p = sub.add_parser("ingest-video")
+    p.add_argument("file")
+    for field in ("event-id", "source", "group-id", "event-time"):
+        p.add_argument("--" + field, required=True)
+    p = sub.add_parser("test-report")
+    p.add_argument("run_id")
     p = sub.add_parser("retry"); p.add_argument("sample_id")
     p = sub.add_parser("annotate")
     p.add_argument("sample_id"); p.add_argument("label", type=int)
     p.add_argument("--revision", type=int, required=True)
     p.add_argument("--author", required=True); p.add_argument("--reviewer", required=True)
+    p = sub.add_parser("vote")
+    p.add_argument("sample_id")
+    p.add_argument("revision", type=int)
+    p.add_argument("voter")
+    p.add_argument("label", type=int)
+    p = sub.add_parser("review")
+    p.add_argument("sample_id")
+    p.add_argument("revision", type=int)
+    p.add_argument("reviewer")
+    p.add_argument("--arbitration", type=int)
+    p.add_argument("--reason")
     p = sub.add_parser("publish"); p.add_argument("release_id"); p.add_argument("members", help="JSON 成员数组")
     p = sub.add_parser("train"); p.add_argument("release_id")
     p = sub.add_parser("evaluate"); p.add_argument("run_id")
@@ -40,12 +58,21 @@ def main():
         elif c == "work": result = loop.work()
         elif c == "ingest":
             result = []
-            for number, line in enumerate(Path(args.file).read_text(encoding="utf-8").splitlines(), 1):
-                if line.strip():
-                    try: result.append(loop.ingest(json.loads(line)))
-                    except (LoopError, ValueError) as exc: raise LoopError("第 %s 行: %s；此前成功行已提交，可幂等重放" % (number, exc))
+            with Path(args.file).open(encoding="utf-8") as stream:
+                for number, line in enumerate(stream, 1):
+                    if line.strip():
+                        try:
+                            result.append(loop.ingest(json.loads(line)))
+                        except (LoopError, ValueError) as exc:
+                            raise LoopError(f"第 {number} 行: {exc}；此前成功行已提交，可幂等重放") from exc
+        elif c == "ingest-video":
+            result = ingest_video(loop, args.file, args.event_id, args.source, args.group_id, args.event_time)
+        elif c == "test-report":
+            result = loop.test_report(args.run_id)
         elif c == "retry": result = loop.retry(args.sample_id)
         elif c == "annotate": result = loop.annotate(args.sample_id, args.revision, args.label, args.author, args.reviewer)
+        elif c == "vote": result = loop.vote(args.sample_id, args.revision, args.voter, args.label)
+        elif c == "review": result = loop.review(args.sample_id, args.revision, args.reviewer, args.arbitration, args.reason)
         elif c == "publish": result = loop.publish(args.release_id, json.loads(Path(args.members).read_text(encoding="utf-8")))
         elif c == "train": result = loop.train(args.release_id)
         elif c == "evaluate": result = loop.evaluate(args.run_id, args.min_accuracy, args.max_regression)

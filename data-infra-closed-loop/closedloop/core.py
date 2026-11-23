@@ -73,6 +73,16 @@ CREATE TABLE IF NOT EXISTS feedback(id TEXT PRIMARY KEY, prediction_id TEXT REFE
 CREATE TABLE IF NOT EXISTS batches(id TEXT PRIMARY KEY, payload TEXT NOT NULL, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS iterations(id TEXT PRIMARY KEY, batch_id TEXT REFERENCES batches(id), release_id TEXT REFERENCES releases(id), run_id TEXT REFERENCES runs(id), baseline_id TEXT, payload TEXT NOT NULL, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT, action TEXT NOT NULL, entity TEXT NOT NULL, payload TEXT NOT NULL, created TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS predictions_sample_time ON predictions(sample_id,created DESC,id DESC);
+CREATE INDEX IF NOT EXISTS feedback_prediction_time ON feedback(prediction_id,available_at DESC,id DESC);
+CREATE INDEX IF NOT EXISTS jobs_state_lease ON jobs(state,lease_until);
+CREATE TABLE IF NOT EXISTS votes(
+    sample_id TEXT NOT NULL REFERENCES samples(id),
+    revision INTEGER NOT NULL, voter TEXT NOT NULL, label INTEGER NOT NULL,
+    created TEXT NOT NULL, PRIMARY KEY(sample_id,revision,voter)
+);
+CREATE TABLE IF NOT EXISTS holdout_reports(run_id TEXT PRIMARY KEY REFERENCES runs(id), report_hash TEXT NOT NULL, created TEXT NOT NULL);
+
 """
 
 
@@ -233,6 +243,59 @@ class Loop:
             self.audit("annotation_verified", aid)
         return aid
 
+    def vote(self, sample_id, revision, voter, value):
+        label(value)
+        if type(revision) is not int or revision < 1 or not voter.strip():
+            raise LoopError("需要正整数修订号和投票人")
+        with self.db:
+            # Acquire the write lock before checking whether the round is frozen.
+            self.db.execute("BEGIN IMMEDIATE")
+            if self.row("samples", sample_id)["status"] != "READY":
+                raise LoopError("样本尚未通过质检")
+            old = self.db.execute(
+                "SELECT label FROM votes WHERE sample_id=? AND revision=? AND voter=?",
+                (sample_id, revision, voter),
+            ).fetchone()
+            if old:
+                if old["label"] != value:
+                    raise LoopError("同一轮投票禁止覆盖")
+                return
+            if self.db.execute("SELECT 1 FROM annotations WHERE sample_id=? AND revision=?",
+                               (sample_id, revision)).fetchone():
+                raise LoopError("标注轮次已冻结")
+            self.db.execute("INSERT INTO votes VALUES(?,?,?,?,?)",
+                            (sample_id, revision, voter, value, now()))
+            self.audit("annotation_vote", sample_id, {"revision": revision, "voter": voter})
+
+    def review(self, sample_id, revision, reviewer, arbitration=None, reason=None):
+        with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            votes = self.db.execute(
+                "SELECT voter,label FROM votes WHERE sample_id=? AND revision=? ORDER BY voter",
+                (sample_id, revision),
+            ).fetchall()
+            if len(votes) < 2 or not reviewer.strip() or reviewer in {v["voter"] for v in votes}:
+                raise LoopError("需要至少两名投票人和独立复核人")
+            labels = {v["label"] for v in votes}
+            if len(labels) == 1:
+                if arbitration is not None:
+                    raise LoopError("一致投票无需仲裁")
+                value = votes[0]["label"]
+            else:
+                if arbitration is None or not reason or not reason.strip():
+                    raise LoopError("投票冲突，需要仲裁标签和理由")
+                value = label(arbitration)
+            aid = sample_id + ":" + str(revision)
+            if self.db.execute("SELECT 1 FROM annotations WHERE id=?", (aid,)).fetchone():
+                raise LoopError("标注轮次已冻结")
+            self.db.execute("INSERT INTO annotations VALUES(?,?,?,?,?,?,?)",
+                            (aid, sample_id, revision, value, votes[0]["voter"], reviewer, now()))
+            self.audit("annotation_review", aid, {
+                "votes": [dict(v) for v in votes], "reviewer": reviewer,
+                "arbitration_reason": reason, "label": value,
+            })
+            return aid
+
     def publish(self, release_id, members):
         if not members:
             raise LoopError("不允许发布空数据集")
@@ -336,6 +399,33 @@ class Loop:
         return {"count": len(data), "accuracy": sum(matrix[c][c] for c in range(3))/len(data),
                 "macro_f1": sum(f1)/3, "recall": recall, "confusion_matrix": matrix,
                 "slices": {s: dict(v, accuracy=v["correct"]/v["count"]) for s, v in slices.items()}}
+
+    def test_report(self, run_id):
+        """Persist an evaluation of frozen test members without affecting routing."""
+        run = self.row("runs", run_id)
+        manifest_hash = self.row("releases", run["release_id"])["manifest_hash"]
+        members = self.get(manifest_hash)["members"]
+        data = [
+            dict(member, features=features(self.get(member["object_hash"])["features"]))
+            for member in members if member["split"] == "test"
+        ]
+        if {member["label"] for member in data} != {0, 1, 2}:
+            raise LoopError("测试集必须覆盖三类")
+        report = {"run_id": run_id, "manifest_hash": manifest_hash,
+                  "model_hash": run["artifact_hash"], "split": "test",
+                  "metrics": self.metrics(self.get(run["artifact_hash"]), data)}
+        report_hash = self.put(report)
+        with self.db:
+            inserted = self.db.execute(
+                "INSERT OR IGNORE INTO holdout_reports VALUES(?,?,?)",
+                (run_id, report_hash, now()),
+            )
+            if inserted.rowcount:
+                self.audit("holdout_evaluated", run_id, {"report_hash": report_hash})
+            stored = self.db.execute(
+                "SELECT report_hash FROM holdout_reports WHERE run_id=?", (run_id,)
+            ).fetchone()["report_hash"]
+        return dict(self.get(stored), report_hash=stored)
 
     def active(self):
         row = self.db.execute("SELECT deployment_id FROM active WHERE slot='local'").fetchone()
@@ -446,21 +536,24 @@ class Loop:
             raise LoopError("预算必须为正数")
         cutoff = timestamp(cutoff) if cutoff else now()
         candidates = []
-        eligible = self.db.execute("SELECT * FROM samples WHERE status='READY' ORDER BY id").fetchall()
+        eligible = self.db.execute("SELECT s.* FROM samples s JOIN events e ON s.event_id=e.id WHERE s.status='READY' AND e.created<=? AND s.event_time<=? ORDER BY s.id", (cutoff, cutoff))
         for sample in eligible:
             # Never promote established validation/test content into training candidates.
             locked = self.db.execute("SELECT split FROM split_groups WHERE (kind='group' AND value=?) OR (kind='hash' AND value=?)", (sample["group_id"], sample["object_hash"])).fetchall()
             if locked:
                 continue
-            prediction = self.db.execute("SELECT * FROM predictions WHERE sample_id=? ORDER BY created DESC,id DESC LIMIT 1", (sample["id"],)).fetchone()
+            prediction = self.db.execute("SELECT * FROM predictions WHERE sample_id=? AND created<=? ORDER BY created DESC,id DESC LIMIT 1", (sample["id"], cutoff)).fetchone()
+            fb = None
             reason = "random_coverage"
             if prediction:
-                fb = self.db.execute("SELECT * FROM feedback WHERE prediction_id=? AND available_at<=? ORDER BY available_at DESC,id DESC LIMIT 1", (prediction["id"], cutoff)).fetchone()
+                fb = self.db.execute("SELECT * FROM feedback WHERE prediction_id=? AND available_at<=? AND created<=? ORDER BY available_at DESC,id DESC LIMIT 1", (prediction["id"], cutoff, cutoff)).fetchone()
                 if fb and fb["label"] != prediction["label"]:
                     reason = "feedback_disagreement_requires_review"
                 elif max(json.loads(prediction["probabilities"])) < 0.65:
                     reason = "uncertain_score"
-            candidates.append({"sample_id": sample["id"], "group_id": sample["group_id"], "object_hash": sample["object_hash"], "reason": reason})
+            candidates.append({"sample_id": sample["id"], "group_id": sample["group_id"], "object_hash": sample["object_hash"], "reason": reason,
+                               "prediction_id": prediction["id"] if prediction else None,
+                               "feedback_id": fb["id"] if fb else None})
         rng = random.Random(seed)
         rng.shuffle(candidates)
         priority = {"feedback_disagreement_requires_review": 0, "uncertain_score": 1, "random_coverage": 2}
@@ -476,11 +569,11 @@ class Loop:
                 if m["group_id"] in seen or m["object_hash"] in seen:
                     continue
                 seen.update(key)
-                chosen.append(m)
+                chosen.append(dict(m, selection_pool="random" if pool is candidates else "priority"))
                 if len(chosen) >= limit:
                     break
         bid = identifier("batch")
-        payload = {"strategy": "review_priority_random_v1", "seed": seed, "cutoff": cutoff, "budget": budget, "members": chosen}
+        payload = {"strategy": "review_priority_random_v2", "seed": seed, "cutoff": cutoff, "budget": budget, "members": chosen}
         with self.db:
             self.db.execute("INSERT INTO batches VALUES(?,?,?)", (bid, encode(payload), now()))
             self.audit("mined", bid, {"count": len(chosen)})
