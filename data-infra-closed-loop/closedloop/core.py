@@ -326,7 +326,12 @@ class Loop:
                 annotation = self.db.execute("SELECT * FROM annotations WHERE sample_id=? ORDER BY revision DESC LIMIT 1", (sid,)).fetchone()
                 if annotation is None:
                     raise LoopError("缺少复核标签: " + sid)
-                for kind, value, local in (("group", sample["group_id"], groups), ("hash", sample["object_hash"], hashes)):
+                event = self.db.execute("SELECT payload FROM events WHERE id=?", (sample["event_id"],)).fetchone()
+                media = json.loads(event["payload"]).get("media_sha256")
+                split_keys = [("group", sample["group_id"], groups), ("hash", sample["object_hash"], hashes)]
+                if isinstance(media, str) and len(media) == 64 and all(c in "0123456789abcdef" for c in media):
+                    split_keys.append(("media", media, hashes))
+                for kind, value, local in split_keys:
                     old = self.db.execute("SELECT split FROM split_groups WHERE kind=? AND value=?", (kind, value)).fetchone()
                     if (value in local and local[value] != split) or (old and old["split"] != split):
                         raise LoopError("同源或重复内容跨划分: " + value)

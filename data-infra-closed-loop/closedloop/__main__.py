@@ -6,7 +6,7 @@ from pathlib import Path
 from .core import Loop, LoopError
 from .demo import run
 from .drift import report as drift_report
-from .video import ingest_video
+from .video import ingest_video, near_duplicates
 
 
 def main():
@@ -19,9 +19,12 @@ def main():
     p.add_argument("--limit", type=int)
     p = sub.add_parser("ingest"); p.add_argument("file", help="JSONL 事件文件")
     p = sub.add_parser("ingest-video")
+    p.add_argument("--fingerprint", action="store_true")
     p.add_argument("file")
     for field in ("event-id", "source", "group-id", "event-time"):
         p.add_argument("--" + field, required=True)
+    p = sub.add_parser("near-duplicates")
+    p.add_argument("--limit", type=int, default=500)
     p = sub.add_parser("drift-report")
     p.add_argument("release_id")
     p.add_argument("--start", required=True)
@@ -79,7 +82,9 @@ def main():
                         except (LoopError, ValueError) as exc:
                             raise LoopError(f"第 {number} 行: {exc}；此前成功行已提交，可幂等重放") from exc
         elif c == "ingest-video":
-            result = ingest_video(loop, args.file, args.event_id, args.source, args.group_id, args.event_time)
+            result = ingest_video(loop, args.file, args.event_id, args.source, args.group_id, args.event_time, args.fingerprint)
+        elif c == "near-duplicates":
+            result = near_duplicates(loop, args.limit)
         elif c == "drift-report":
             result = drift_report(loop, args.release_id, args.start, args.end,
                                   args.limit, args.minimum, args.threshold)

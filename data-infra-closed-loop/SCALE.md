@@ -31,7 +31,7 @@ python3 -m closedloop test-report RUN_ID
 
 - `CLOSEDLOOP_POSTGRES_DSN` 指向本项目专用数据库。进程启动时创建所需表与索引。各写事务通过 PostgreSQL 事务级 advisory lock 串行，保留本地事务语义。跨进程可用性和吞吐需要实测，后续可将热点拆为行级锁或分区任务队列。
 - `CLOSEDLOOP_S3_BUCKET` 指向事先创建的桶，通过 SDK 的凭证链配置访问。可配置 `CLOSEDLOOP_S3_PREFIX` 和 `CLOSEDLOOP_S3_ENDPOINT`。服务端必须支持条件 PUT，读取时应用仍核对 SHA-256。
-- PostgreSQL 和 S3 可以分别启用。启用 S3 后，特征、数据清单、报告和模型对象写入桶，视频原件仍保存在本地运行目录的 media 下。
+- PostgreSQL 和 S3 可以分别启用。启用 S3 后，特征、数据清单、报告和模型对象写入桶，视频原件也写入桶内的 media/ 前缀。
 - 开关后使用独立的数据库和对象前缀做集成演示。现有 SQLite 历史需要显式迁移，配置开关不会复制数据。节点需使用一致的存储配置。
 - `python3 -m closedloop work --limit 100` 可作为定时任务的单次处理入口。任务租约仍由元数据仓库管理。
 
@@ -67,3 +67,14 @@ python3 -m closedloop test-report RUN_ID
 验证回流改善、模型回滚、并发 Worker 完成数和过期租约接管，并报告本次任务队列处理速度。
 配置 PostgreSQL 和 S3 后加 `--external`，仅在专用空数据库及专用桶前缀运行。
 外部运行会保留测试数据，脚本不会清除数据库或对象。该测量只针对合成小任务，不涵盖 API 延迟、真实媒体加工或生产容量。
+
+### 视频原件与近重复筛查
+
+启用 S3 后，`ingest-video` 将原件流式写入 `media/<sha256>`，使用条件写入及摘要校验。
+当前采用单次 PUT，适用于服务端允许的单对象大小。既有本地原件需另行迁移。
+
+接入时加 `--fingerprint`，对视频开头每秒取一帧，最多八帧，计算灰度 dHash。
+`python3 -m closedloop near-duplicates --limit 500` 在最近的样本窗口中输出候选对，
+供人工确认并统一同源分组，结果不会自动合并。取样位置偏移、裁剪和低纹理画面
+都会影响召回或误报。新发布同时检查原件摘要，避免同一文件以不同 group_id
+进入不同划分。旧版清单的媒体划分锁不会自动回填。

@@ -94,3 +94,28 @@ class S3Objects:
                 raise
             if self.read(key) != data:
                 raise OSError("Existing S3 object does not match its content digest") from exc
+
+    def write_media(self, digest, stream):
+        """Stream a content-addressed media object without overwriting it."""
+        import base64
+        import hashlib
+
+        key = self.prefix + "media/" + digest
+        checksum = base64.b64encode(bytes.fromhex(digest)).decode("ascii")
+        try:
+            self.client.put_object(Bucket=self.bucket, Key=key, Body=stream,
+                                   ContentType="application/octet-stream",
+                                   ChecksumSHA256=checksum, IfNoneMatch="*")
+        except self.error as exc:
+            if exc.response["Error"]["Code"] not in ("PreconditionFailed", "412"):
+                raise
+            body = self.client.get_object(Bucket=self.bucket, Key=key)["Body"]
+            actual = hashlib.sha256()
+            try:
+                for chunk in iter(lambda: body.read(1024 * 1024), b""):
+                    actual.update(chunk)
+            finally:
+                body.close()
+            if actual.hexdigest() != digest:
+                raise OSError("Existing media failed SHA-256 verification") from exc
+        return "s3://" + self.bucket + "/" + key
