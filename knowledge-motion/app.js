@@ -16,6 +16,7 @@ const defaultCardDuration = 5200;
 const visualPlayers = [];
 let currentTopic;
 let cardIndex = -1;
+let lastReadIndex = 0;
 let timer;
 let finished = false;
 let remaining = 0;
@@ -213,7 +214,7 @@ function renderPhaseControls(phases, showScene) {
   return player;
 }
 
-function selectCard(index) {
+function selectCard(index, scroll = true) {
   cardIndex = index;
   finished = false;
   const entry = currentTopic.cards[index];
@@ -221,19 +222,24 @@ function selectCard(index) {
   progress.max = currentTopic.cards.length || 1;
   progress.value = index + 1;
   position.textContent = entry ? `${index + 1} / ${currentTopic.cards.length}` : "总览";
-  previous.disabled = index < 0;
+  previous.disabled = index <= 0;
   next.disabled = index >= currentTopic.cards.length - 1;
   play.textContent = index < 0 ? "播放动效" : "从此处播放";
   cards.classList.toggle("focused", Boolean(entry));
+  cards.classList.toggle("reading-view", Boolean(entry));
+  if (entry) lastReadIndex = index;
+  document.querySelector("#overview").textContent = entry ? "查看全部知识点" : "返回逐节阅读";
+  document.querySelector("#overview").setAttribute("aria-pressed", String(!entry));
   for (const [cardPosition, card] of Array.from(cards.children).entries()) {
     const active = cardPosition === index;
+    card.hidden = Boolean(entry) && !active;
     card.classList.toggle("highlighted", active);
   }
   for (const [stepPosition, button] of Array.from(steps.children).entries()) {
     if (stepPosition === index) button.setAttribute("aria-current", "step");
     else button.removeAttribute("aria-current");
   }
-  if (entry) {
+  if (entry && scroll) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     cards.children[index].scrollIntoView({
       block: "nearest",
@@ -642,6 +648,10 @@ function renderWorkedExample(example) {
 function renderTopic(topic) {
   stopPlayback();
   currentTopic = topic;
+  lastReadIndex = 0;
+  const disclosure = document.querySelector("#case-disclosure");
+  disclosure.open = false;
+  disclosure.hidden = !window.workedExamples?.[topic.id];
   renderWorkedExample(window.workedExamples?.[topic.id]);
   document.title = topic.title + " | 知识动效图谱";
   document.querySelector("#title").textContent = topic.title;
@@ -727,7 +737,7 @@ function renderTopic(topic) {
   }
   document.querySelector("#transport").hidden = !topic.cards.length;
   play.disabled = !topic.cards.length;
-  selectCard(-1);
+  selectCard(topic.cards.length ? 0 : -1, false);
 }
 
 for (const topic of topics) {
@@ -754,7 +764,10 @@ speed.addEventListener("change", () => {
   playbackRate = Number(speed.value);
   if (playing) startPlayback();
 });
-document.querySelector("#overview").addEventListener("click", () => navigate(-1));
+document.querySelector("#overview").addEventListener("click", () => navigate(cardIndex < 0 ? lastReadIndex : -1));
+document.querySelector("#case-disclosure").addEventListener("toggle", (event) => {
+  if (!event.currentTarget.open) stopExperimentPlayback?.();
+});
 document.addEventListener("keydown", (event) => {
   if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
       event.target.closest("button, select, input, summary, a, textarea, [contenteditable]")) return;
@@ -762,7 +775,7 @@ document.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "ArrowLeft":
       event.preventDefault();
-      navigate(cardIndex - 1);
+      navigate(Math.max(0, cardIndex - 1));
       break;
     case "ArrowRight":
       event.preventDefault();
