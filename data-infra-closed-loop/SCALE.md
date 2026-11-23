@@ -23,4 +23,16 @@ python3 -m closedloop test-report RUN_ID
 
 挖掘按截止时间过滤接入、预测和反馈，保留预测 ID、反馈 ID 及抽样池。该能力不构成历史快照重放，当前样本状态和已发布划分仍会影响结果。现有上传与候选扫描应在容量实测后改造为分批消费，JSONL CLI 已逐行读入但仍会收集结果 ID。
 
-规模化验收需要提供实际数据规模、峰值流量、延迟目标、存储与计算环境、保留策略及业务模型。当前版本尚未接入 PostgreSQL/S3、调度、监控或灰度平台，也没有业务吞吐或容灾结论。
+规模化验收需要提供实际数据规模、峰值流量、延迟目标、存储与计算环境、保留策略及业务模型。当前版本尚未完成 PostgreSQL/S3 联合验收，也尚未接入调度、监控或灰度平台，也没有业务吞吐或容灾结论。
+
+## PostgreSQL 与 S3 集成
+
+安装 `python3 -m pip install -r requirements-infra.txt`。不设置环境变量时继续使用 SQLite 和本地对象目录。
+
+- `CLOSEDLOOP_POSTGRES_DSN` 指向本项目专用数据库。进程启动时创建所需表与索引。各写事务通过 PostgreSQL 事务级 advisory lock 串行，保留本地事务语义。跨进程可用性和吞吐需要实测，后续可将热点拆为行级锁或分区任务队列。
+- `CLOSEDLOOP_S3_BUCKET` 指向事先创建的桶，通过 SDK 的凭证链配置访问。可配置 `CLOSEDLOOP_S3_PREFIX` 和 `CLOSEDLOOP_S3_ENDPOINT`。服务端必须支持条件 PUT，读取时应用仍核对 SHA-256。
+- PostgreSQL 和 S3 可以分别启用。启用 S3 后，特征、数据清单、报告和模型对象写入桶，视频原件仍保存在本地运行目录的 media 下。
+- 开关后使用独立的数据库和对象前缀做集成演示。现有 SQLite 历史需要显式迁移，配置开关不会复制数据。节点需使用一致的存储配置。
+- `python3 -m closedloop work --limit 100` 可作为定时任务的单次处理入口。任务租约仍由元数据仓库管理。
+
+在独立数据库和空对象前缀上运行 `python3 -m closedloop demo`，然后运行 `status` 和 `lineage request-0`，可覆盖版本发布、训练门禁、预测反馈和回滚。当前环境没有 PostgreSQL 服务，尚未执行真实后端联合验收。

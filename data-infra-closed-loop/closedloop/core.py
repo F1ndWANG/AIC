@@ -91,10 +91,18 @@ class Loop:
         self.root = Path(root).resolve()
         self.objects = self.root / "objects"
         self.objects.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(str(self.root / "metadata.sqlite"), timeout=30)
-        self.db.row_factory = sqlite3.Row
-        self.db.execute("PRAGMA journal_mode=WAL")
-        self.db.executescript(SCHEMA)
+        from .storage import Postgres, S3Objects
+
+        bucket = os.environ.get("CLOSEDLOOP_S3_BUCKET")
+        self.remote_objects = S3Objects(bucket) if bucket else None
+        dsn = os.environ.get("CLOSEDLOOP_POSTGRES_DSN")
+        if dsn:
+            self.db = Postgres(dsn, SCHEMA)
+        else:
+            self.db = sqlite3.connect(str(self.root / "metadata.sqlite"), timeout=30)
+            self.db.row_factory = sqlite3.Row
+            self.db.execute("PRAGMA journal_mode=WAL")
+            self.db.executescript(SCHEMA)
 
     def close(self):
         self.db.close()
@@ -115,6 +123,9 @@ class Loop:
     def put(self, value):
         raw = encode(value).encode("utf-8")
         key = digest(raw)
+        if self.remote_objects:
+            self.remote_objects.write(key, raw)
+            return key
         target = self.objects / key
         temp = self.objects / ("staging-" + uuid.uuid4().hex)
         try:
@@ -136,7 +147,7 @@ class Loop:
         if len(key) != 64 or any(c not in "0123456789abcdef" for c in key):
             raise LoopError("无效对象摘要")
         try:
-            raw = (self.objects / key).read_bytes()
+            raw = self.remote_objects.read(key) if self.remote_objects else (self.objects / key).read_bytes()
         except FileNotFoundError:
             raise LoopError("对象缺失: " + key)
         if digest(raw) != key:
@@ -208,14 +219,15 @@ class Loop:
             self.audit("quality", sample["id"], {"status": status, "error": error})
         return status
 
-    def work(self):
+    def work(self, limit=None):
         counts = {}
-        while True:
+        while limit is None or sum(counts.values()) < limit:
             job = self.claim()
             if job is None:
                 return counts
             state = self.complete(job)
             counts[state] = counts.get(state, 0) + 1
+        return counts
 
     def retry(self, sample_id):
         with self.db:
@@ -319,7 +331,7 @@ class Loop:
                     if (value in local and local[value] != split) or (old and old["split"] != split):
                         raise LoopError("同源或重复内容跨划分: " + value)
                     local[value] = split
-                    self.db.execute("INSERT OR IGNORE INTO split_groups VALUES(?,?,?)", (kind, value, split))
+                    self.db.execute("INSERT INTO split_groups VALUES(?,?,?) ON CONFLICT DO NOTHING", (kind, value, split))
                 frozen.append({"sample_id": sid, "split": split, "object_hash": sample["object_hash"],
                                "group_id": sample["group_id"], "source": sample["source"],
                                "annotation_revision_id": annotation["id"], "label": annotation["label"],
@@ -417,7 +429,7 @@ class Loop:
         report_hash = self.put(report)
         with self.db:
             inserted = self.db.execute(
-                "INSERT OR IGNORE INTO holdout_reports VALUES(?,?,?)",
+                "INSERT INTO holdout_reports VALUES(?,?,?) ON CONFLICT DO NOTHING",
                 (run_id, report_hash, now()),
             )
             if inserted.rowcount:
@@ -469,7 +481,7 @@ class Loop:
             self.get(self.row("runs", evaluation["run_id"])["artifact_hash"])
             did = identifier("deploy")
             self.db.execute("INSERT INTO deployments VALUES(?,?,?,?,?)", (did, evaluation["run_id"], evaluation_id, evaluation["incumbent_id"], now()))
-            self.db.execute("INSERT OR REPLACE INTO active VALUES('local',?)", (did,))
+            self.db.execute("INSERT INTO active VALUES('local',?) ON CONFLICT(slot) DO UPDATE SET deployment_id=excluded.deployment_id", (did,))
             self.audit("deployed_local", did)
             self.db.commit()
             return did
@@ -621,7 +633,7 @@ class Loop:
 
     def status(self):
         tables = ("events", "samples", "annotations", "releases", "runs", "evaluations", "deployments", "predictions", "feedback", "batches", "iterations", "audit")
-        counts = {t: self.db.execute("SELECT COUNT(*) FROM " + t).fetchone()[0] for t in tables}
+        counts = {t: self.db.execute("SELECT COUNT(*) AS n FROM " + t).fetchone()["n"] for t in tables}
         counts["jobs"] = {r["state"]: r["n"] for r in self.db.execute("SELECT state,COUNT(*) n FROM jobs GROUP BY state")}
         counts["active_deployment"] = self.active()
         return counts

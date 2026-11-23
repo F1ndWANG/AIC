@@ -12,8 +12,10 @@ def main():
     parser = argparse.ArgumentParser(description="可追溯数据闭环，本地参考实现")
     parser.add_argument("--root", default="runtime", help="运行数据目录（默认 runtime）")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("init", "work", "status", "demo", "rollback"):
+    for name in ("init", "status", "demo", "rollback"):
         sub.add_parser(name)
+    p = sub.add_parser("work")
+    p.add_argument("--limit", type=int)
     p = sub.add_parser("ingest"); p.add_argument("file", help="JSONL 事件文件")
     p = sub.add_parser("ingest-video")
     p.add_argument("file")
@@ -55,7 +57,10 @@ def main():
         c = args.command
         if c in ("init", "status"): result = loop.status()
         elif c == "demo": result = run(loop)
-        elif c == "work": result = loop.work()
+        elif c == "work":
+            if args.limit is not None and args.limit < 1:
+                raise LoopError("--limit 必须为正整数")
+            result = loop.work(args.limit)
         elif c == "ingest":
             result = []
             with Path(args.file).open(encoding="utf-8") as stream:
