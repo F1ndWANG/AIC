@@ -1274,3 +1274,49 @@ window.workedExamples["agent-verification"].experiment = {
     }];
   }
 };
+
+// Replay the existing chapter case when a numerical experiment is not yet defined.
+for (const example of Object.values(window.workedExamples)) {
+  if (example.experiment) continue;
+  const frames = example.frames;
+  example.experiment = {
+    label: "逐阶段回放 · " + example.title,
+    min: 0,
+    max: frames.length - 1,
+    initial: 0,
+    unit: "阶段",
+    compare() { return []; },
+    snapshot(stage) { return frames[stage].title + " · " + frames[stage].result; },
+    diagram(stage) {
+      const current = frames[stage];
+      return {
+        items: frames.map((frame, index) => ({
+          label: (index + 1) + " · " + frame.title,
+          detail: index <= stage ? frame.result : "尚未到达",
+          state: index === stage ? "accepted" : index < stage ? "occupied" : "vacant"
+        })),
+        explanation: "当前状态：" + current.state + "。执行：" + current.action +
+          " 观察结果：" + current.result + "。依据：" + current.reason
+      };
+    },
+    matrices(stage) {
+      return [{
+        title: "逐步对照状态、动作与观察 · 点击已到达的格子读依据",
+        corner: "阶段",
+        columns: ["输入与状态", "执行动作", "观察结果"],
+        rows: frames.map((frame, index) => ({
+          label: (index + 1) + " · " + frame.title,
+          cells: [frame.state, frame.action, frame.result].map((text, column) => ({
+            text: index <= stage ? text : "尚未到达",
+            weight: index === stage ? 0.7 : index < stage ? 0.2 : 0,
+            detail: index <= stage ? frame.reason : "把阶段推进到此处后，再核对该步的状态、动作和结果。",
+            trace: index <= stage ? [{
+              text: frame.action + " → " + frame.result,
+              references: [0, 1, 2].map(source => ({ matrix: 0, row: index, column: source }))
+            }] : []
+          }))
+        }))
+      }];
+    }
+  };
+}
