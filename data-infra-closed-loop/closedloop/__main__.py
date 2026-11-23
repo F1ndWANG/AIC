@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from .core import Loop, LoopError
 from .demo import run
+from .drift import report as drift_report
 from .video import ingest_video
 
 
@@ -21,6 +22,13 @@ def main():
     p.add_argument("file")
     for field in ("event-id", "source", "group-id", "event-time"):
         p.add_argument("--" + field, required=True)
+    p = sub.add_parser("drift-report")
+    p.add_argument("release_id")
+    p.add_argument("--start", required=True)
+    p.add_argument("--end", required=True)
+    p.add_argument("--limit", type=int, default=1000)
+    p.add_argument("--minimum", type=int, default=30)
+    p.add_argument("--threshold", type=float, default=.15)
     p = sub.add_parser("test-report")
     p.add_argument("run_id")
     p = sub.add_parser("retry"); p.add_argument("sample_id")
@@ -72,6 +80,9 @@ def main():
                             raise LoopError(f"第 {number} 行: {exc}；此前成功行已提交，可幂等重放") from exc
         elif c == "ingest-video":
             result = ingest_video(loop, args.file, args.event_id, args.source, args.group_id, args.event_time)
+        elif c == "drift-report":
+            result = drift_report(loop, args.release_id, args.start, args.end,
+                                  args.limit, args.minimum, args.threshold)
         elif c == "test-report":
             result = loop.test_report(args.run_id)
         elif c == "retry": result = loop.retry(args.sample_id)

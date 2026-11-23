@@ -55,3 +55,15 @@ python3 -m closedloop test-report RUN_ID
 请求使用 `Authorization: Bearer <token>`，POST 使用 JSON。
 `/healthz` 仅表示进程存活。Worker 支持正常退出以及异常退避，过期租约可由后续 Worker 回收。
 可由外部监控系统轮询队列指标设置告警。标注操作仍使用现有 CLI。
+
+### 漂移与可重复验收
+
+`python3 -m closedloop drift-report RELEASE --start ISO_START --end ISO_END`
+将冻结训练成员与时间窗内最近的 READY 样本逐维比较。报告保存样本 ID、阈值、样本数、
+维度不匹配数量和 Jensen–Shannon 散度。样本不足会单独返回状态，不会作为正常样本量判断。
+应选取特征定义一致的数据。此检查可发现分布变化，不能判断模型性能降级，也不会触发训练或发布。
+
+`python3 -m closedloop.acceptance --workers 4 --events 100`
+验证回流改善、模型回滚、并发 Worker 完成数和过期租约接管，并报告本次任务队列处理速度。
+配置 PostgreSQL 和 S3 后加 `--external`，仅在专用空数据库及专用桶前缀运行。
+外部运行会保留测试数据，脚本不会清除数据库或对象。该测量只针对合成小任务，不涵盖 API 延迟、真实媒体加工或生产容量。
