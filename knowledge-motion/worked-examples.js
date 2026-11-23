@@ -990,3 +990,140 @@ window.workedExamples["sft-peft"].experiment.matrices = function (rank) {
     }
   ];
 };
+
+window.workedExamples["decoding-controls"].experiment = {
+  label: "改变 Top-p 阈值 · 输入值按百分数表示",
+  min: 10, max: 100, initial: 70, unit: "%",
+  precision: 3,
+  distribution(value) {
+    const probabilities = [0.5, 0.3, 0.15, 0.05];
+    // Use integer mass units to make the exact 50/80/95/100 boundaries reproducible.
+    const cumulative = [50, 80, 95, 100];
+    const count = cumulative.findIndex(mass => mass >= value) + 1;
+    const keptMass = cumulative[count - 1] / 100;
+    return probabilities.map((original, index) => ({
+      original, cumulative: cumulative[index],
+      probability: index < count ? original / keptMass : 0,
+      kept: index < count, keptMass
+    }));
+  },
+  compare(value) {
+    return this.distribution(value).map((item, index) => [
+      ["A", "B", "C", "D"][index] + " · 重归一化概率 %",
+      item.probability * 100,
+      item.kept ? "保留，除以候选集的原始概率总和" : "被阈值截断"
+    ]);
+  },
+  diagram(value) {
+    const rows = this.distribution(value);
+    return {
+      items: rows.map((item, index) => ({
+        label: ["A", "B", "C", "D"][index],
+        detail: "原始 " + item.original * 100 + "% → " + (item.probability * 100).toFixed(2) + "%",
+        percent: item.probability * 100,
+        state: item.kept ? "probability" : "excluded"
+      })),
+      explanation: "原分布按降序排列为 [0.50,0.30,0.15,0.05]。累计概率首次达到 " + value +
+        "% 时保留 " + rows.filter(item => item.kept).length + " 项，原始保留质量为 " +
+        (rows[0].keptMass * 100).toFixed(0) + "%。每个保留项再除以 " + rows[0].keptMass +
+        "，才形成总和为 1 的新分布。阈值 80% 恰好保留 A/B，81% 就必须再加入 C，所以候选变化是跳跃的。以下演示固定温度，只改变 Top-p；它控制候选集合，最终抽到哪一项仍取决于随机数。"
+    };
+  },
+  matrices(value) {
+    const rows = this.distribution(value);
+    return [{
+      title: "排序 → 累计 → 截断 → 重新归一化",
+      corner: "候选",
+      columns: ["原概率", "累计质量", "是否保留", "新概率"],
+      rows: rows.map((item, index) => ({
+        label: ["A", "B", "C", "D"][index],
+        cells: [
+          { text: item.original.toFixed(2), weight: item.original, detail: "模型输出分布中的原始候选概率。四项原概率相加为 1。" },
+          { text: item.cumulative + "%", weight: item.cumulative / 100, detail: "从排名第一的 A 累加到本行，累计质量为 " + item.cumulative + "%。最小的达标前缀决定保留集合。" },
+          { text: item.kept ? "保留" : "截断", weight: item.kept ? 1 : 0, detail: item.kept ? "本项在累计首次达标的前缀内。跨过阈值的那个候选也必须保留。" : "累计阈值已经在更靠前的位置达到，该项被置零。" },
+          {
+            text: item.probability.toFixed(4), weight: item.probability,
+            detail: item.kept ? "新概率=" + item.original + "/" + item.keptMass + "=" + item.probability.toFixed(6) + "。" : "该项已截断，新概率为 0。",
+            trace: [{
+              text: item.kept ? item.original + " ÷ " + item.keptMass + " = " + item.probability.toFixed(6) : "截断 → 0",
+              references: [{ matrix: 0, row: index, column: 0 }, { matrix: 0, row: index, column: 2 }, { matrix: 0, row: index, column: 3 }]
+            }]
+          }
+        ]
+      }))
+    }];
+  }
+};
+
+window.workedExamples["grpo-objective"].experiment.matrices = function (value) {
+  const ratio = value / 10;
+  const clipped = Math.max(0.8, Math.min(1.2, ratio));
+  const first = -ratio;
+  const second = -clipped;
+  return [{
+    title: "负优势 A=−1 · 两个分支先相乘再取 min",
+    corner: "分支",
+    columns: ["比值", "乘优势 A", "代理值"],
+    rows: [
+      {
+        label: "未裁剪",
+        cells: [
+          { text: ratio.toFixed(1), detail: "r=π_new/π_old=" + ratio.toFixed(1) + "，来自同一已采样动作的新旧策略概率。" },
+          { text: "× (−1)", detail: "这里固定优势 A=−1，表示应降低这个动作的概率。" },
+          { text: first.toFixed(1), detail: "rA=" + ratio.toFixed(1) + "×(−1)=" + first.toFixed(1) }
+        ]
+      },
+      {
+        label: "裁剪",
+        cells: [
+          { text: clipped.toFixed(1), detail: "clip(r,0.8,1.2)=" + clipped.toFixed(1) + "。先把比值限制在区间内。" },
+          { text: "× (−1)", detail: "与未裁剪分支使用相同的负优势。负数乘法会改变大小关系。" },
+          { text: second.toFixed(1), detail: "clip(r)A=" + clipped.toFixed(1) + "×(−1)=" + second.toFixed(1) }
+        ]
+      },
+      {
+        label: "最终取 min",
+        cells: [
+          { text: "两分支比较", detail: "完整代理项为 min(rA,clip(r)A)，比较已经乘优势之后的值。" },
+          { text: first === second ? "相等" : first < second ? "选未裁剪" : "选裁剪", detail: "比较 " + first.toFixed(1) + " 与 " + second.toFixed(1) + "，保留较小者。" },
+          {
+            text: Math.min(first, second).toFixed(1),
+            detail: "最终代理项为 " + Math.min(first, second).toFixed(1) + "。训练通常最大化该代理目标，写成最小化损失时还要取负号。",
+            trace: [
+              { text: "未裁剪项 " + ratio.toFixed(1) + "×(−1)=" + first.toFixed(1), references: [{matrix:0,row:0,column:0},{matrix:0,row:0,column:1},{matrix:0,row:0,column:2}] },
+              { text: "裁剪项 " + clipped.toFixed(1) + "×(−1)=" + second.toFixed(1), references: [{matrix:0,row:1,column:0},{matrix:0,row:1,column:1},{matrix:0,row:1,column:2}] },
+              { text: "min(" + first.toFixed(1) + "," + second.toFixed(1) + ")=" + Math.min(first, second).toFixed(1), references: [{matrix:0,row:0,column:2},{matrix:0,row:1,column:2},{matrix:0,row:2,column:2}] }
+            ]
+          }
+        ]
+      }
+    ]
+  }];
+};
+
+window.workedExamples["rrf-ranking"].experiment.matrices = function (k) {
+  const contributions = [[1/(k+1),0],[1/(k+2),1/(k+2)],[0,1/(k+1)]];
+  return [{
+    title: "按文档 ID 对齐两路贡献 · k=" + k,
+    corner: "文档",
+    columns: ["词法路", "向量路", "贡献求和"],
+    rows: contributions.map((parts,index) => ({
+      label: ["A","B","C"][index],
+      cells: [
+        ...parts.map((number,route) => ({
+          text: number.toFixed(5), weight: number * (k+1),
+          detail: number === 0 ? "该文档未进入本路返回列表，本路贡献为 0。此处只对已返回候选融合。" :
+            "本路名次为 " + (index === 1 ? 2 : 1) + "，贡献=1/(" + k + "+" + (index === 1 ? 2 : 1) + ")=" + number.toFixed(6) + "。"
+        })),
+        {
+          text: (parts[0]+parts[1]).toFixed(5), weight: (parts[0]+parts[1]) / (2/(k+2)),
+          detail: ["A","B","C"][index] + " 的两路贡献相加，得 " + (parts[0]+parts[1]).toFixed(6) + "。本例 B 第一，A 与 C 并列。",
+          trace: [{
+            text: parts[0].toFixed(6) + " + " + parts[1].toFixed(6) + " = " + (parts[0]+parts[1]).toFixed(6),
+            references: [{matrix:0,row:index,column:0},{matrix:0,row:index,column:1},{matrix:0,row:index,column:2}]
+          }]
+        }
+      ]
+    }))
+  }];
+};
