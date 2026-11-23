@@ -222,6 +222,11 @@ function selectCard(index, scroll = true) {
   progress.max = currentTopic.cards.length || 1;
   progress.value = index + 1;
   position.textContent = entry ? `${index + 1} / ${currentTopic.cards.length}` : "总览";
+  document.querySelector("#reading-navigation").hidden = !entry;
+  document.querySelector("#reading-position").textContent = entry
+    ? `${index + 1} / ${currentTopic.cards.length}` : "";
+  document.querySelector("#reading-previous").disabled = index <= 0;
+  document.querySelector("#reading-next").disabled = !entry || index >= currentTopic.cards.length - 1;
   previous.disabled = index <= 0;
   next.disabled = index >= currentTopic.cards.length - 1;
   play.textContent = index < 0 ? "播放动效" : "从此处播放";
@@ -758,6 +763,8 @@ play.addEventListener("click", () => {
 });
 previous.addEventListener("click", () => navigate(cardIndex - 1));
 next.addEventListener("click", () => navigate(cardIndex + 1));
+document.querySelector("#reading-previous").addEventListener("click", () => navigate(cardIndex - 1));
+document.querySelector("#reading-next").addEventListener("click", () => navigate(cardIndex + 1));
 speed.addEventListener("change", () => {
   const playing = timer !== undefined;
   stopPlayback();
