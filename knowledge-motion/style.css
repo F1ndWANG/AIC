@@ -468,3 +468,11 @@ footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--edge);
   #worked-example, .card { box-shadow: none; }
   .experiment-history, .experiment-snapshot, .example-experiment > .visual-label { display: none; }
 }
+
+.example-data[hidden] { display: none; }
+.calculation-matrix td { vertical-align: top; }
+.matrix-cell { line-height: 1.6; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: no-preference) {
+  .experiment-item.accepted { box-shadow: inset 0 3px 0 var(--accent); }
+  .experiment-item.vacant { transition: opacity .3s ease, background-color .3s ease; }
+}
