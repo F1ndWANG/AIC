@@ -1,0 +1,120 @@
+{
+  "scenario": "synthetic_numeric_features_not_real_video",
+  "quality": {
+    "READY": 66,
+    "QUARANTINED": 1
+  },
+  "quarantined_sample": "s_f1234d75178d892a133a4103",
+  "initial_run": "run_3b05a7cd62164afebaf404f96eca5aa6",
+  "updated_run": "run_24c882d8de564c859c6fac8598e8390c",
+  "initial_deployment": "deploy_5741b6e610174efc815a90252dd59a2a",
+  "updated_deployment": "deploy_4cd1063568404243a31094f903bfcfa8",
+  "rollback_restored": "deploy_5741b6e610174efc815a90252dd59a2a",
+  "iteration": {
+    "before": {
+      "count": 24,
+      "accuracy": 0.6666666666666666,
+      "macro_f1": 0.5555555555555555,
+      "recall": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "confusion_matrix": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          8
+        ],
+        [
+          0,
+          0,
+          8
+        ]
+      ],
+      "slices": {
+        "synthetic_device_a": {
+          "count": 24,
+          "correct": 16,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    "after": {
+      "count": 24,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "recall": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "confusion_matrix": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          0,
+          8,
+          0
+        ],
+        [
+          0,
+          0,
+          8
+        ]
+      ],
+      "slices": {
+        "synthetic_device_a": {
+          "count": 24,
+          "correct": 24,
+          "accuracy": 1.0
+        }
+      }
+    },
+    "accuracy_delta": 0.33333333333333337,
+    "conclusion": "offline_improved",
+    "business_gain_verified": false,
+    "iteration_id": "loop_6ecde42a1b0a42ba828028024c785393"
+  },
+  "after_update_prediction": {
+    "id": "request-after-update",
+    "sample_id": "s_4e2d2dc80d65706faa340f61",
+    "deployment_id": "deploy_4cd1063568404243a31094f903bfcfa8",
+    "label": 1,
+    "probabilities": "[4.0133884635325746e-10, 0.8112771750688634, 0.1887228245297977]",
+    "created": "2026-11-23T08:11:28.548931+00:00"
+  },
+  "status": {
+    "events": 91,
+    "samples": 91,
+    "annotations": 84,
+    "releases": 2,
+    "runs": 2,
+    "evaluations": 3,
+    "deployments": 3,
+    "predictions": 25,
+    "feedback": 24,
+    "batches": 1,
+    "iterations": 1,
+    "audit": 419,
+    "jobs": {
+      "QUARANTINED": 1,
+      "SUCCEEDED": 90
+    },
+    "active_deployment": {
+      "id": "deploy_ca68ba91906e48b2bc51423c9c82ad10",
+      "run_id": "run_24c882d8de564c859c6fac8598e8390c",
+      "evaluation_id": "eval_1a285525669a4a71aafc843a4d49be02",
+      "previous_id": "deploy_5741b6e610174efc815a90252dd59a2a",
+      "created": "2026-11-23T08:11:28.605908+00:00"
+    }
+  }
+}

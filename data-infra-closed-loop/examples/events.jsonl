@@ -1,0 +1,2 @@
+{"event_id":"example-001","source":"device-a","group_id":"video-001","event_time":"2026-11-23T00:00:00Z","features":[0.2,0.8]}
+{"event_id":"example-002","source":"device-b","group_id":"video-002","event_time":"2026-11-23T00:00:00Z","features":[1.2,0.4]}
