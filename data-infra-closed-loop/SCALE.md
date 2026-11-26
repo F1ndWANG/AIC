@@ -78,3 +78,20 @@ python3 -m closedloop test-report RUN_ID
 供人工确认并统一同源分组，结果不会自动合并。取样位置偏移、裁剪和低纹理画面
 都会影响召回或误报。新发布同时检查原件摘要，避免同一文件以不同 group_id
 进入不同划分。旧版清单的媒体划分锁不会自动回填。
+
+### 标注人员身份和队列告警
+
+`closedloop.service --identities-file /secure/identities.json` 支持独立标注人员与复核人员凭证。
+文件以人员 ID 为键，值包含 role（annotator 或 reviewer）与独立随机 token（至少 32 字节）。
+该文件由部署方配置，不提交仓库。使用现有 Bearer 请求方式：
+
+- POST /v1/annotations/vote：sample_id、revision、label，投票者由服务确定。
+- POST /v1/annotations/review：sample_id、revision、可选 arbitration 和 reason，
+  复核者由服务确定。原有独立复核和冲突仲裁规则仍生效。
+
+这提供 API 级身份与角色控制，尚未实现任务分派、标注网页或统一身份提供商。
+直接使用数据库或可信操作员 CLI 可绕过 API，生产环境应限制这些入口。
+
+`python3 -m closedloop.monitor --max-pending 1000 --max-expired 0 --max-quarantined 10`
+输出队列 JSON、记录审计事件、超过阈值时退出码为 1。可接入已有周期调度系统，
+由外部平台负责通知、聚合和告警恢复。数据库连接异常会以非零状态退出。

@@ -13,13 +13,23 @@ LOG = logging.getLogger(__name__)
 MAX_BODY = 1024 * 1024
 
 
-def create_app(root, tokens):
+def create_app(root, tokens, identities=None):
     """Map each role to a distinct credential. Run behind an internal TLS proxy."""
     tokens = {role: token.encode() for role, token in tokens.items() if token}
-    if not tokens or len(set(tokens.values())) != len(tokens):
+    if (not tokens and not identities) or len(set(tokens.values())) != len(tokens):
         raise ValueError("Configure distinct service tokens")
     if any(len(token) < 32 for token in tokens.values()):
         raise ValueError("Service tokens must contain at least 32 bytes")
+
+    # Per-person credentials bind votes and reviews to authenticated identities.
+    people = {}
+    for name, config in (identities or {}).items():
+        if not isinstance(name, str) or not name.strip() or config["role"] not in ("annotator", "reviewer"):
+            raise ValueError("Invalid annotation identity")
+        credential = config["token"].encode()
+        if len(credential) < 32 or credential in tokens.values() or credential in people:
+            raise ValueError("Annotation credentials must be distinct and at least 32 bytes")
+        people[credential] = (name, config["role"])
 
     routes = {
         ("POST", "/v1/events"): ("writer", lambda loop, body: {"sample_id": loop.ingest(body)}),
@@ -35,6 +45,19 @@ def create_app(root, tokens):
         ).fetchone())),
     }
 
+    def vote(loop, body, actor):
+        loop.vote(body["sample_id"], body["revision"], actor, body["label"])
+        return {"recorded": True}
+
+    def review(loop, body, actor):
+        return {"annotation_id": loop.review(body["sample_id"], body["revision"], actor,
+                                              body.get("arbitration"), body.get("reason"))}
+
+    annotation_routes = {
+        ("POST", "/v1/annotations/vote"): ("annotator", vote),
+        ("POST", "/v1/annotations/review"): ("reviewer", review),
+    }
+
     def app(environ, start_response):
         def respond(status, value):
             payload = json.dumps(value, ensure_ascii=False).encode()
@@ -46,13 +69,22 @@ def create_app(root, tokens):
         method, path = environ["REQUEST_METHOD"], environ["PATH_INFO"]
         if (method, path) == ("GET", "/healthz"):
             return respond("200 OK", {"live": True})
-        route = routes.get((method, path))
+        personal = (method, path) in annotation_routes
+        route = annotation_routes.get((method, path)) if personal else routes.get((method, path))
         if not route:
             return respond("404 Not Found", {"error": "unknown endpoint"})
         role, handler = route
         supplied = environ.get("HTTP_AUTHORIZATION", "").encode()
         expected = tokens.get(role)
-        if expected is None or not hmac.compare_digest(supplied, b"Bearer " + expected):
+        actor = None
+        if personal:
+            for token, (name, assigned_role) in people.items():
+                if assigned_role == role and hmac.compare_digest(supplied, b"Bearer " + token):
+                    actor = name
+            authorized = actor is not None
+        else:
+            authorized = expected is not None and hmac.compare_digest(supplied, b"Bearer " + expected)
+        if not authorized:
             return respond("401 Unauthorized", {"error": "unauthorized"})
         try:
             body = {}
@@ -67,7 +99,7 @@ def create_app(root, tokens):
                     return respond("400 Bad Request", {"error": "expected a JSON object"})
             loop = Loop(root)
             try:
-                result = handler(loop, body)
+                result = handler(loop, body, actor) if personal else handler(loop, body)
             finally:
                 loop.close()
             return respond("200 OK", result)
@@ -85,10 +117,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default="runtime")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--identities-file", help="JSON file mapping each person to role and token")
     args = parser.parse_args()
     tokens = {role: os.environ.get("CLOSEDLOOP_TOKEN_" + role.upper())
               for role in ("writer", "inference", "feedback", "operator")}
-    with make_server("127.0.0.1", args.port, create_app(args.root, tokens)) as server:
+    identities = None
+    if args.identities_file:
+        with open(args.identities_file, encoding="utf-8") as file:
+            identities = json.load(file)
+    with make_server("127.0.0.1", args.port, create_app(args.root, tokens, identities)) as server:
         server.serve_forever()
 
 

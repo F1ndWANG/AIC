@@ -37,3 +37,39 @@ class ServiceTests(unittest.TestCase):
             finally:
                 loop.close()
             self.assertEqual(request("GET", "/v1/queue", credentials["operator"])[1]["pending"], 0)
+
+    def test_annotation_identity_and_separation(self):
+        with tempfile.TemporaryDirectory() as root:
+            loop = Loop(root)
+            try:
+                sid = loop.ingest({"event_id": "vote", "source": "test", "group_id": "g",
+                                   "event_time": now(), "features": [1]})
+                loop.work()
+            finally:
+                loop.close()
+            app = create_app(root, {}, {
+                "alice": {"role": "annotator", "token": "a" * 32},
+                "bob": {"role": "annotator", "token": "b" * 32},
+                "carol": {"role": "reviewer", "token": "c" * 32},
+            })
+
+            def post(path, token, body):
+                payload = json.dumps(body).encode()
+                status = []
+                result = app({"REQUEST_METHOD": "POST", "PATH_INFO": path,
+                              "HTTP_AUTHORIZATION": "Bearer " + token,
+                              "CONTENT_TYPE": "application/json", "CONTENT_LENGTH": str(len(payload)),
+                              "wsgi.input": io.BytesIO(payload)}, lambda code, headers: status.append(code))
+                return status[0], json.loads(b"".join(result))
+
+            vote = {"sample_id": sid, "revision": 1, "label": 1, "voter": "fake"}
+            self.assertTrue(post("/v1/annotations/vote", "c" * 32, vote)[0].startswith("401"))
+            for token in ("a" * 32, "b" * 32):
+                self.assertTrue(post("/v1/annotations/vote", token, vote)[0].startswith("200"))
+            self.assertTrue(post("/v1/annotations/review", "a" * 32, vote)[0].startswith("401"))
+            self.assertTrue(post("/v1/annotations/review", "c" * 32, vote)[0].startswith("200"))
+            loop = Loop(root)
+            try:
+                self.assertEqual({r["voter"] for r in loop.db.execute("SELECT voter FROM votes")}, {"alice", "bob"})
+            finally:
+                loop.close()
